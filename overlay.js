@@ -1,15 +1,22 @@
 // --- overlay.js (iframe) ---
-
-let latestText = "";
-let summarizer = null;             // <-- declare the variable here
+let summarizer = null;
 
 const elOut = document.getElementById("out");
 const elStatus = document.getElementById("status");
-const btnRefreshSel = document.getElementById("btn-refresh-selection");
-const btnSummarize = document.getElementById("btn-summarize");
+const btnSummarizePage = document.getElementById("btn-summarize-page");
+const btnSummarizeSelection = document.getElementById("btn-summarize-selection");
 
-btnRefreshSel.addEventListener("click", () => {
-  window.parent.postMessage({ type: "REQUEST_EXTRACTION", selectionOnly: true }, "*");
+// Request page text on load
+window.addEventListener("load", () => {
+  elOut.textContent = "Click a button above to start summarizing!";
+});
+
+btnSummarizePage.addEventListener("click", () => {
+  window.parent.postMessage({ type: "REQUEST_EXTRACTION", mode: "page" }, "*");
+});
+
+btnSummarizeSelection.addEventListener("click", () => {
+  window.parent.postMessage({ type: "REQUEST_EXTRACTION", mode: "selection" }, "*");
 });
 
 const btnClose = document.getElementById("btn-close");
@@ -21,10 +28,10 @@ btnClose.addEventListener("click", () => {
 
 window.addEventListener("message", (e) => {
   if (e.data?.type === "EXTRACTION_RESULT") {
-    const { paragraphs } = e.data.data || {};
-    latestText = (paragraphs || []).map(p => p.text).join("\n\n");
-    // give clear feedback so you know it updated:
-    elOut.textContent = latestText ? "(Text loaded. Click Summarize.)" : "No text found.";
+    const { paragraphs, mode } = e.data.data || {};
+    const text = (paragraphs || []).map(p => p.text).join("\n\n");
+
+    summarizeText(text, mode);
   }
 });
 
@@ -44,27 +51,34 @@ async function makeSummarizer({ type, format, length, outputLanguage }) {
   // create a fresh instance each click (simple & robust)
   return await Summarizer.create({
     type, format, length, outputLanguage,
-    sharedContext: "Summarize the provided page text.",
+    sharedContext: "Summarize the provided text content.",
     monitor(m) {
       m.addEventListener("downloadprogress", (e) => {
-        elStatus.textContent = `Downloading model: ${Math.round(e.loaded * 100)}%`;
+        const progress = Math.round(e.loaded * 100);
+        elStatus.textContent = progress === 100 ? "" : `Downloading model: ${progress}%`;
       });
     }
   });
 }
 
-// Click → summarize (provides user activation)
-btnSummarize.addEventListener("click", async () => {
-  if (!latestText.trim()) { elOut.textContent = "No text to summarize."; return; }
+// Summarize the given text
+async function summarizeText(text, source) {
 
-  const length = document.querySelector('input[name="summary-length"]')?.value
-              || document.querySelector('input[name="len"]:checked')?.value
-              || "medium";
+  console.log("text to summarize : " + text);
+  if (!text.trim()) { 
+    elOut.textContent = source === "selection" ? "No text selected to summarize." : "No page content to summarize."; 
+    return; 
+  }
+
+  const length = document.querySelector('input[name="len"]:checked')?.value || "medium";
   const outputLanguage = pickOutputLang();
 
   try {
-    elStatus.textContent = "";
-    elOut.textContent = "Summarizing…";
+    elOut.textContent = `Summarizing ${source}...`;
+
+    // Update button states
+    btnSummarizePage.disabled = true;
+    btnSummarizeSelection.disabled = true;
 
     // Do NOT reference an undefined variable here.
     // Either reuse a cached instance, or (simplest) recreate each time:
@@ -75,15 +89,18 @@ btnSummarize.addEventListener("click", async () => {
       outputLanguage
     });
 
-    const result = await summarizer.summarize(latestText, {
+    const result = await summarizer.summarize(text, {
       outputLanguage,                 // keep passing here to silence warnings
       context: "General audience summary."
     });
 
     elOut.textContent = result || "(Empty result)";
-    elStatus.textContent = "Done";
   } catch (err) {
-    elStatus.textContent = "";
+    elStatus.textContent = "Error occurred";
     elOut.textContent = `Error: ${err.message || err}`;
+  } finally {
+    // Re-enable buttons
+    btnSummarizePage.disabled = false;
+    btnSummarizeSelection.disabled = false;
   }
-});
+}
