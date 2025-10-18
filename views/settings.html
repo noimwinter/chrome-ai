@@ -1,0 +1,64 @@
+<link rel="stylesheet" href="views/settings.css" />
+
+<header class="bar">
+  <button id="btn-back" title="Back to main">←</button>
+  <strong>Settings</strong>
+</header>
+
+<main class="pad">
+  <div class="settings-section">
+    <h4 class="section-title">User Profile</h4>
+    <div class="form-group">
+      <label for="occupation" class="form-label">Occupation</label>
+      <select id="occupation" class="form-select">
+        <option value="">Select your occupation</option>
+        <option value="student" selected>Student</option>
+        <option value="teacher">Teacher</option>
+        <option value="developer">Developer</option>
+        <option value="researcher">Researcher</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="settings-section">
+    <h4 class="section-title">Custom Prompt</h4>
+    <div class="form-group">
+      <label for="custom-prompt" class="form-label">
+        Custom Instructions
+        <span class="form-hint">Tell the AI how you'd like summaries to be tailored for you</span>
+      </label>
+      <textarea id="custom-prompt" class="form-textarea"
+        placeholder="Example: As a biology major, please emphasize biological content when summarizing."
+        rows="4"></textarea>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="settings-section">
+    <h4 class="section-title">Summary Preferences</h4>
+    <div class="form-group">
+      <label class="form-label">Default Summary Type</label>
+      <div class="radio-group">
+        <div class="option-item">
+          <input type="radio" name="default-summary-type" value="key-points" id="type-points" checked>
+          <label for="type-points">Key Points</label>
+        </div>
+        <div class="option-item">
+          <input type="radio" name="default-summary-type" value="markdown" id="type-markdown">
+          <label for="type-markdown">Markdown</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button id="btn-save" class="signature">Save Settings</button>
+    <button id="btn-reset" class="btn-secondary">Reset to Default</button>
+  </div>
+</main>
+
+<script type="module" src="views/settings.js"></script>

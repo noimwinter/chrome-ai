@@ -1,32 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8" />
-  <title>Personal Summarizer</title>
-  <link rel="stylesheet" href="overlay.css">
-</head>
-<body>
-  <header class="bar">
-  <button id="btn-close" title="Close panel" style="float:right;">✕</button>
-  <strong>Personal Summarizer</strong>
-  </header>
-
-  <main class="pad">
-    <div class="row">
-      <label><input type="radio" name="len" value="short"> Short</label>
-      <label><input type="radio" name="len" value="medium" checked> Medium</label>
-      <label><input type="radio" name="len" value="long"> Long</label>
-    </div>
-    <div class="row2">
-      <button id="btn-summarize-page">Summarize Page</button>
-      <button id="btn-summarize-selection">Summarize Selection</button>
-      <span id="status" class="dim"></span>
-    </div>
-
-    <h3>Summary / Key Points</h3>
-    <pre id="out" class="box">Click a button above to start summarizing!</pre>
-  </main>
-
+  <head>
+    <meta charset="utf-8" />
+    <title>Personal Summarizer</title>
+    <link rel="stylesheet" href="global.css" />
+  </head>
+  <body id="content">
+    <!-- Content Area -->
+  </body>
   <script type="module" src="overlay.js"></script>
-</body>
+  <script type="module" src="vendor/marked.min.js"></script>
 </html>
