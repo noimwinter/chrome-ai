@@ -85,6 +85,32 @@
   color: #a0aec0;
 }
 
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 14px;
+  color: #2d3748;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-input:hover {
+  border-color: #cbd5e0;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #4a5568;
+  box-shadow: 0 0 0 3px rgba(74, 85, 104, 0.1);
+}
+
+.form-input::placeholder {
+  color: #a0aec0;
+}
+
 .radio-group {
   display: flex;
   flex-direction: column;
@@ -105,4 +131,14 @@
 
 #btn-back {
   padding: 10px 11px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.form-error {
+  margin-top: 6px;
+  color: #b91c1c;
+  font-size: 12px;
 }

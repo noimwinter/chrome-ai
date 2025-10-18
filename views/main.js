@@ -34,6 +34,21 @@ function pickOutputLang(pref) {
   return SUPPORTED.has(l) ? l : "en";
 }
 
+// Get the summary type setting
+async function getSummaryType() {
+  return await chrome.storage.local.get({ summaryType: DEFAULT_SETTINGS.summaryType }).then((res) => res.summaryType);
+}
+
+// Generate the summary context based on occupation and custom prompt
+async function getSummaryContext() {
+  const { occupation, customPrompt } = await chrome.storage.local.get({
+    occupation: DEFAULT_SETTINGS.occupation,
+    customPrompt: DEFAULT_SETTINGS.customPrompt
+  });
+
+  return `Summary for a ${occupation}.` + customPrompt.trim();
+}
+
 // Create a summarizer instance on demand
 async function makeSummarizer({ type, format, length, outputLanguage }) {
   if (!("Summarizer" in self)) throw new Error("Summarizer API not supported in this Chrome.");
@@ -64,6 +79,7 @@ async function summarizeText(text, source) {
   const btnSummarizeSelection = document.getElementById("btn-summarize-selection");
 
   console.log("text to summarize : " + text);
+
   if (!text.trim()) {
     if (elOut) {
       elOut.textContent = source === "selection" ? "No text selected to summarize." : "No page content to summarize.";
@@ -81,10 +97,9 @@ async function summarizeText(text, source) {
     if (btnSummarizePage) btnSummarizePage.disabled = true;
     if (btnSummarizeSelection) btnSummarizeSelection.disabled = true;
 
-    // Do NOT reference an undefined variable here.
-    // Either reuse a cached instance, or (simplest) recreate each time:
+    // Create summarizer
     summarizer = await makeSummarizer({
-      type: "key-points",
+      type: await getSummaryType(),
       format: 'markdown',
       length,
       outputLanguage
@@ -92,7 +107,7 @@ async function summarizeText(text, source) {
 
     const result = await summarizer.summarize(text, {
       outputLanguage,
-      context: "General audience summary."
+      context: await getSummaryContext()
     });
 
   if (elOut) elOut.innerHTML = window.marked.parse(result) || "(Empty result)";

@@ -1,5 +1,5 @@
-// Create a context menu on install
-chrome.runtime.onInstalled.addListener(() => {
+// Create a context menu on install and seed default storage values
+chrome.runtime.onInstalled.addListener(async (details) => {
   chrome.contextMenus.create({
     id: "open-overlay",
     title: "Summarize with AI",

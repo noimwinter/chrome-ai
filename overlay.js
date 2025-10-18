@@ -1,10 +1,15 @@
-// Load marked library for markdown parsing
-// window.marked = marked;
-
 // On initial load, show the main view
 window.addEventListener("load", () => {
   window.loadView("views/main.html");
 });
+
+// set default settings
+const DEFAULT_SETTINGS = {
+  occupation: "student",
+  customPrompt: "",
+  summaryType: "key-points",
+};
+window.DEFAULT_SETTINGS = DEFAULT_SETTINGS;
 
 // Load a view into the content area
 async function loadView(path) {
@@ -24,6 +29,14 @@ async function loadView(path) {
     if (oldScript.type) newScript.type = oldScript.type;
     if (oldScript.src) newScript.src = oldScript.src;
     oldScript.replaceWith(newScript);
+  }
+
+  try {
+    // Dispatch view loaded event
+    const evt = new CustomEvent("view:loaded", { detail: { path } });
+    document.dispatchEvent(evt);
+  } catch (_) {
+    // ignore
   }
 }
 window.loadView = loadView;

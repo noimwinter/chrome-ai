@@ -19,6 +19,19 @@
         <option value="other">Other</option>
       </select>
     </div>
+
+    <!-- Custom occupation input shown only when 'Other' is selected -->
+    <div class="form-group hidden" id="custom-occupation-group">
+      <label for="custom-occupation" class="form-label">Your Occupation</label>
+      <input
+        type="text"
+        id="custom-occupation"
+        class="form-input"
+        maxlength="100"
+      />
+    </div>
+
+    <div id="occupation-error" class="form-error"></div>
   </div>
 
   <div class="divider"></div>
@@ -31,8 +44,9 @@
         <span class="form-hint">Tell the AI how you'd like summaries to be tailored for you</span>
       </label>
       <textarea id="custom-prompt" class="form-textarea"
-        placeholder="Example: As a biology major, please emphasize biological content when summarizing."
-        rows="4"></textarea>
+        placeholder="Example: As a biology major, please emphasize biological content when summarizing." 
+        rows="4" 
+        maxlength="500"></textarea>
     </div>
   </div>
 
@@ -48,8 +62,8 @@
           <label for="type-points">Key Points</label>
         </div>
         <div class="option-item">
-          <input type="radio" name="default-summary-type" value="markdown" id="type-markdown">
-          <label for="type-markdown">Markdown</label>
+          <input type="radio" name="default-summary-type" value="tldr" id="type-tldr">
+          <label for="type-tldr">Summary</label>
         </div>
       </div>
     </div>
