@@ -1,122 +1,137 @@
-let summarizer = null;
+let _pendingSummarizer = false;
+let _pendingDiagram = false;
 
 document.addEventListener("click", (e) => {
-  if (e.target.closest('#btn-close')) {
+  if (e.target.closest("#btn-close")) {
     window.parent.postMessage({ type: "CLOSE_OVERLAY" }, "*");
   }
 
-  if (e.target.closest('#btn-settings')) {
+  if (e.target.closest("#btn-settings")) {
     window.loadView("views/settings.html");
   }
-  
-  if (e.target.closest('#btn-summarize-page')) {
+
+  if (e.target.closest("#btn-summarize-page")) {
     window.parent.postMessage({ type: "REQUEST_EXTRACTION", mode: "page" }, "*");
   }
 
-  if (e.target.closest('#btn-summarize-selection')) {
+  if (e.target.closest("#btn-summarize-selection")) {
     window.parent.postMessage({ type: "REQUEST_EXTRACTION", mode: "selection" }, "*");
   }
 });
 
-window.addEventListener("message", (e) => {
+// Handle Extraction result
+window.addEventListener("message", async (e) => {
   if (e.data?.type === "EXTRACTION_RESULT") {
     const { paragraphs, mode } = e.data.data || {};
-    const text = (paragraphs || []).map(p => p.text).join("\n\n");
+    const text = (paragraphs || []).map((p) => p.text).join("\n\n");
 
-    summarizeText(text, mode);
+    document.getElementById("btn-summarize-page").disabled = true;
+    document.getElementById("btn-summarize-selection").disabled = true;
+
+    const hasText = !!text && text.trim().length > 0;
+    _pendingSummarizer = hasText;
+    _pendingDiagram = hasText;
+
+    requestSummarizeText(text, mode);
+    requestGenerateMermaid(text);
+    // In case there's nothing to do (empty text), re-enable immediately
+    maybeEnableButtons();
   }
 });
 
-// Supported output languages (avoid the warning)
-const SUPPORTED = new Set(["en","es","ja"]);
-function pickOutputLang(pref) {
-  const l = (pref || navigator.language || "en").slice(0,2).toLowerCase();
-  return SUPPORTED.has(l) ? l : "en";
-}
+// Handle Summarizer event
+window.addEventListener("message", async (e) => {
+  if (e.data?.type === "SUMMARIZER_PROGRESS") {
+    document.getElementById("summarizer-status").textContent = e.data.progress === 0 || e.data.progress === 100 ? "" : `Downloading Summarizer : ${e.data.progress}%`;
+  }
 
-// Get the summary type setting
-async function getSummaryType() {
-  return await chrome.storage.local.get({ summaryType: DEFAULT_SETTINGS.summaryType }).then((res) => res.summaryType);
-}
+  if (e.data?.type === "SUMMARIZER_RESULT") {
+    document.getElementById("out").innerHTML = window.marked.parse(e.data?.result) || "(Empty result)";
+    _pendingSummarizer = false;
+    maybeEnableButtons();
+  }
 
-// Generate the summary context based on occupation and custom prompt
-async function getSummaryContext() {
-  const { occupation, customPrompt } = await chrome.storage.local.get({
-    occupation: DEFAULT_SETTINGS.occupation,
-    customPrompt: DEFAULT_SETTINGS.customPrompt
-  });
+  if (e.data?.type === "SUMMARIZER_ERROR") {
+    document.getElementById("status").textContent = "Error occurred";
+    document.getElementById("out").innerHTML = `Error: ${e.data?.error}`;
+    _pendingSummarizer = false;
+    maybeEnableButtons();
+  }
+});
 
-  return `Summary for a ${occupation}.` + customPrompt.trim();
-}
+// Handle Language Model events
+window.addEventListener("message", async (e) => {
+  if (e.data?.type === "LANGUAGE_MODEL_PROGRESS") {
+    document.getElementById("language-model-status").textContent = e.data.progress === 0 || e.data.progress === 100 ? "" : `Downloading LanguageModel : ${e.data.progress}%`;
+  }
 
-// Create a summarizer instance on demand
-async function makeSummarizer({ type, format, length, outputLanguage }) {
-  if (!("Summarizer" in self)) throw new Error("Summarizer API not supported in this Chrome.");
-  const availability = await Summarizer.availability();
-  if (availability === "unavailable") throw new Error("Model unavailable on this device/browser.");
+  if (e.data?.type === "LANGUAGE_MODEL_RESULT") {
+    await renderMermaid(e.data.result);
+    _pendingDiagram = false;
+    maybeEnableButtons();
+  }
 
-  // create a fresh instance each click (simple & robust)
-  return await Summarizer.create({
-    type, format, length, outputLanguage,
-    sharedContext: "Summarize the provided text content.",
-    monitor(m) {
-      m.addEventListener("downloadprogress", (e) => {
-        const progress = Math.round(e.loaded * 100);
-        const elStatus = document.getElementById("status");
-        if (elStatus) {
-          elStatus.textContent = (progress === 0 || progress === 100) ? "" : `Downloading model: ${progress}%`;
-        }
-      });
-    }
-  });
+  if (e.data?.type === "LANGUAGE_MODEL_ERROR") {
+    document.getElementById("mermaid-diagram").classList.remove("hidden");
+    document.getElementById("mermaid-diagram").textContent = "error: " + e.data.error;
+    _pendingDiagram = false;
+    maybeEnableButtons();
+  }
+});
+
+// After summarization/diagram tasks, maybe enable buttons
+function maybeEnableButtons() {
+  if (!_pendingSummarizer && !_pendingDiagram) {
+    document.getElementById("btn-summarize-page").disabled = false;
+    document.getElementById("btn-summarize-selection").disabled = false;
+  }
 }
 
 // Summarize the given text
-async function summarizeText(text, source) {
-  const elOut = document.getElementById("out");
-  const elStatus = document.getElementById("status");
-  const btnSummarizePage = document.getElementById("btn-summarize-page");
-  const btnSummarizeSelection = document.getElementById("btn-summarize-selection");
-
+async function requestSummarizeText(text, source) {
   console.log("text to summarize : " + text);
 
   if (!text.trim()) {
-    if (elOut) {
-      elOut.textContent = source === "selection" ? "No text selected to summarize." : "No page content to summarize.";
-    }
+    document.getElementById("out").textContent = (source === "selection") ? "No text selected to summarize." : "No page content to summarize.";
     return;
   }
 
-  const length = document.querySelector('input[name="len"]:checked')?.value || "medium";
-  const outputLanguage = pickOutputLang();
+  document.getElementById("out").textContent = `Summarizing ${source}...`;
+  const summaryLength = document.querySelector('input[name="len"]:checked').value;
+  window.parent.postMessage({ type: "REQUEST_SUMMARIZATION", summaryLength: summaryLength, text: text }, "*");
+}
+
+// request Mermaid diagram generation
+async function requestGenerateMermaid(text) {
+  const container = document.getElementById("mermaid-diagram");
+  container.classList.add("hidden");
+
+  if (!text.trim()) return;
+
+  window.parent.postMessage({ type: 'REQUEST_LANGUAGE_MODEL_PROMPT', text: 'Generate a Mermaid diagram for the following text:\n\n' + text }, '*');
+}
+
+// Render Mermaid diagram
+async function renderMermaid(text) {
+  const container = document.getElementById("mermaid-diagram");
+
+  const mermaidSyntax = text.match(/```mermaid\s*([\s\S]*?)```/i);
+  if (!mermaidSyntax) return;
+  text = mermaidSyntax[1];
 
   try {
-    if (elOut) elOut.textContent = `Summarizing ${source}...`;
-
-    // Update button states
-    if (btnSummarizePage) btnSummarizePage.disabled = true;
-    if (btnSummarizeSelection) btnSummarizeSelection.disabled = true;
-
-    // Create summarizer
-    summarizer = await makeSummarizer({
-      type: await getSummaryType(),
-      format: 'markdown',
-      length,
-      outputLanguage
-    });
-
-    const result = await summarizer.summarize(text, {
-      outputLanguage,
-      context: await getSummaryContext()
-    });
-
-  if (elOut) elOut.innerHTML = window.marked.parse(result) || "(Empty result)";
+    const renderId = "mermaid-" + Math.random().toString(36).slice(2);
+    const out = await window.mermaid.render(renderId, text.trim());
+    if (out && typeof out.svg === "string") {
+      container.innerHTML = out.svg;
+    } else if (typeof out === "string") {
+      container.innerHTML = out;
+    } else {
+      container.textContent = "Failed to render Mermaid diagram.";
+    }
   } catch (err) {
-    if (elStatus) elStatus.textContent = "Error occurred";
-    if (elOut) elOut.innerHTML = `Error: ${err.message || err}`;
+    container.textContent = "Mermaid render error: " + (err && err.message ? err.message : err);
   } finally {
-    // Re-enable buttons
-    if (btnSummarizePage) btnSummarizePage.disabled = false;
-    if (btnSummarizeSelection) btnSummarizeSelection.disabled = false;
+    container.classList.remove("hidden");
   }
 }

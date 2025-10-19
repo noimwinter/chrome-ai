@@ -4,7 +4,7 @@
   "version": "0.1.1",
   "description": "Personal Chrome Summarizer API demo.",
   "permissions": ["activeTab", "scripting", "contextMenus", "storage"],
-  "host_permissions": ["http://*/*", "https://*/*"],
+  "host_permissions": ["http://*/*", "https://*/*", "<all_urls>"],
   "background": { "service_worker": "background.js" },
   "content_scripts": [
     {
@@ -15,7 +15,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["overlay.html", "overlay.js", "global.css", "views/*", "vendor/*"],
+      "resources": ["overlay.html", "overlay.js", "global.css", "views/*", "vendor/*", "prompts/*"],
       "matches": ["<all_urls>"]
     }
   ],

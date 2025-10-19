@@ -1,3 +1,10 @@
+// set default settings
+const DEFAULT_SETTINGS = {
+  occupation: "student",
+  customPrompt: "",
+  summaryType: "key-points",
+};
+
 let overlayIframe = null;
 
 chrome.runtime.onMessage.addListener((msg) => {
@@ -66,15 +73,6 @@ function extractPage() {
   };
 }
 
-// --- listen for overlay requests (ADD selectionOnly support) ---
-window.addEventListener("message", (e) => {
-  const { type, mode } = e.data || {};
-  if (type === "REQUEST_EXTRACTION") {
-    let data = (mode === "selection") ? extractSelection() : extractPage();
-    overlayIframe?.contentWindow?.postMessage({ type: "EXTRACTION_RESULT", data }, "*");
-  }
-});
-
 window.addEventListener("message", (e) => {
   const { type } = e.data || {};
 
@@ -83,3 +81,112 @@ window.addEventListener("message", (e) => {
     overlayIframe = null;
   }
 });
+
+// Handle Extraction event
+window.addEventListener("message", async (e) => {
+  if (e.data.type === "REQUEST_EXTRACTION") {
+    let data = e.data.mode === "selection" ? extractSelection() : extractPage();
+    overlayIframe?.contentWindow?.postMessage({ type: "EXTRACTION_RESULT", data }, "*");
+  }
+});
+
+// Handle Summarizer event
+window.addEventListener("message", async (e) => {
+  if (e.data.type === "REQUEST_SUMMARIZATION") {
+    try {
+      const summarizer = await makeSummarizer(e.data.summaryLength);
+      const result = await summarizer.summarize(e.data.text);
+      overlayIframe?.contentWindow?.postMessage({ type: "SUMMARIZER_RESULT", result: result }, "*");
+    } catch (err) {
+      overlayIframe?.contentWindow?.postMessage({ type: "SUMMARIZER_ERROR", error: err.message || String(err) }, "*");
+      return;
+    }
+  }
+});
+
+// Handle Language Model events
+window.addEventListener("message", async (e) => {
+  if (e.data.type === 'REQUEST_LANGUAGE_MODEL_PROMPT') {
+    try {
+      const languageModel = await makeLanguageModel();
+      const result = await languageModel.prompt(e.data.text);
+      overlayIframe?.contentWindow?.postMessage({ type: 'LANGUAGE_MODEL_RESULT', result: result }, '*');
+    } catch (err) {
+      overlayIframe?.contentWindow?.postMessage({ type: 'LANGUAGE_MODEL_ERROR', error: err.message || String(err) }, '*');
+      return;
+    }
+  }
+});
+
+// Supported output languages (avoid the warning)
+const SUPPORTED_LANGUAGES = new Set(["en", "es", "ja"]);
+function pickOutputLang(pref) {
+  const l = (pref || navigator.language || "en").slice(0, 2).toLowerCase();
+  return SUPPORTED_LANGUAGES.has(l) ? l : "en";
+}
+
+// Get the summary type setting
+async function getSummaryType() {
+  return await chrome.storage.local.get({ summaryType: DEFAULT_SETTINGS.summaryType }).then((res) => res.summaryType);
+}
+
+// Generate the summary context based on occupation and custom prompt
+async function getSummaryContext() {
+  const { occupation, customPrompt } = await chrome.storage.local.get({
+    occupation: DEFAULT_SETTINGS.occupation,
+    customPrompt: DEFAULT_SETTINGS.customPrompt,
+  });
+
+  return `Summary for a ${occupation}.` + customPrompt.trim();
+}
+
+// Create a summarizer instance
+async function makeSummarizer(summaryLength) {
+  if (!("Summarizer" in self)) throw new Error("Summarizer API not supported in this Chrome.");
+  const availability = await Summarizer.availability();
+  if (availability === "unavailable") throw new Error("Summarizer Model unavailable on this device/browser.");
+
+  return await Summarizer.create({
+    type: await getSummaryType(),
+    format: "markdown",
+    length: summaryLength,
+    sharedContext: await getSummaryContext(),
+    monitor(m) {
+      m.addEventListener("downloadprogress", (e) => {
+        const progress = Math.round(e.loaded * 100);
+        overlayIframe?.contentWindow?.postMessage({ type: 'SUMMARIZER_PROGRESS', progress: progress }, '*');
+      });
+    },
+  });
+}
+
+// Get the language model system prompt
+async function getLanguageModelSystemPrompt() {
+  if (getLanguageModelSystemPrompt._cache) return getLanguageModelSystemPrompt._cache;
+
+  const url = chrome.runtime.getURL('prompts/language-model-system.md');
+  const res = await fetch(url, { cache: 'no-cache' });
+  const text = await res.text();
+
+  getLanguageModelSystemPrompt._cache = text;
+  return text;
+}
+
+// Create a language model instance
+async function makeLanguageModel() {
+  if (!("LanguageModel" in self)) throw new Error("LanguageModel API not supported in this Chrome.");
+  const availability = await LanguageModel.availability();
+  if (availability === "unavailable") throw new Error("LanguageModel unavailable on this device/browser.");
+
+  return await LanguageModel.create({
+    initialPrompts: [
+      { role: 'system', content: await getLanguageModelSystemPrompt() },
+    ],
+    monitor(m) {
+      m.addEventListener("downloadprogress", (e) => {
+        const progress = Math.round(e.loaded * 100);
+        overlayIframe?.contentWindow?.postMessage({ type: 'LANGUAGE_MODEL_PROGRESS', progress: progress }, '*');
+      });
+    },
+  });
+}
