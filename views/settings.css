@@ -133,10 +133,6 @@
   padding: 10px 11px;
 }
 
-.hidden {
-  display: none !important;
-}
-
 .form-error {
   margin-top: 6px;
   color: #b91c1c;

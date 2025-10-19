@@ -11,6 +11,13 @@ const DEFAULT_SETTINGS = {
 };
 window.DEFAULT_SETTINGS = DEFAULT_SETTINGS;
 
+// Initialize Mermaid
+window.mermaid.initialize({
+  startOnLoad: false,
+  securityLevel: "loose",
+  theme: "default",
+});
+
 // Load a view into the content area
 async function loadView(path) {
   const url = chrome.runtime.getURL(path);
