@@ -224,3 +224,90 @@ button.btn-secondary:hover {
   border-color: #cbd5e0;
   color: #2d3748;
 }
+
+/* Highlight Styles */
+.text-highlight {
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 0 2px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.text-highlight:hover {
+  filter: brightness(0.95);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.comment-icon {
+  display: inline-block;
+  margin-left: 2px;
+  font-size: 12px;
+  vertical-align: super;
+  cursor: pointer;
+}
+
+.highlight-item {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.highlight-item:hover {
+  border-color: #cbd5e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.highlight-text {
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #2d3748;
+}
+
+.highlight-comment {
+  font-size: 13px;
+  color: #718096;
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+.highlight-meta {
+  font-size: 12px;
+  color: #a0aec0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.highlight-color-badge {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.highlight-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-small {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.btn-danger {
+  background: #fee;
+  border-color: #fcc;
+  color: #c00;
+}
+
+.btn-danger:hover {
+  background: #fcc;
+  border-color: #faa;
+}
