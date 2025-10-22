@@ -30,14 +30,14 @@ function initHighlighter() {
           highlighter.createHighlightFromSelection(color);
         }
       },
-      onComment: () => {
+      onComment: async () => {
         if (highlighter && commentBox) {
           const selection = window.getSelection();
           if (selection && selection.rangeCount > 0) {
             const range = selection.getRangeAt(0);
             const rect = range.getBoundingClientRect();
             
-            const highlightData = highlighter.createHighlightFromSelection('yellow');
+            const highlightData = await highlighter.createHighlightFromSelection('yellow');
             if (highlightData) {
               commentBox.show(rect, highlightData.comment ? [highlightData.comment] : [], highlightData.id);
             }
