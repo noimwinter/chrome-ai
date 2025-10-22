@@ -22,7 +22,7 @@ Preferred communication style: Simple, everyday language.
 
 **XPath-based Positioning**: Text highlights are stored using XPath expressions that uniquely identify text nodes within the DOM tree. Each highlight includes the XPath to both start and end nodes, along with character offsets within those text nodes. This allows precise recreation of highlights even after page DOM changes.
 
-**Storage Strategy**: Highlights are stored in Chrome's local storage, keyed by full URL (including search parameters and hash). Each highlight object contains the XPath range, selected text content, color, optional comment, and creation timestamp.
+**Storage Strategy**: Highlights are stored in Chrome's local storage, keyed by full URL (including search parameters and hash). Each highlight object contains the XPath range, selected text content, color (yellow or lightblue), optional comment array, and creation timestamp. Comments are stored as arrays to support multiple notes per highlight.
 
 **Persistence**: When a page loads, the highlighter scans stored highlights for the current URL and reconstructs the visual highlights by resolving XPath expressions back to DOM ranges and wrapping them in styled span elements.
 
@@ -50,9 +50,29 @@ Preferred communication style: Simple, everyday language.
 
 **Rationale**: Mermaid provides a text-based, declarative way to generate diagrams without external dependencies, keeping the extension self-contained.
 
+### User Interface System
+
+**Floating Toolbar**: A modern text selection interface that appears when users drag to select text. The toolbar displays a dark, rounded popup with four actions:
+- **Highlight 🟨**: Create yellow highlight
+- **Highlight 🟦**: Create blue highlight  
+- **Summary & Visualization 🧠**: Open overlay for AI summarization
+- **Comment 📜**: Create highlight and open comment box
+
+**Rationale**: Provides immediate, contextual access to features without requiring right-click menu navigation. Mirrors familiar UX patterns from modern note-taking applications.
+
+**Comment Box System**: A floating panel that appears to the right of selected text for adding multiple comments to highlights. Comments are stored as arrays, allowing users to add multiple notes to a single highlighted passage. The box includes:
+- List of existing comments with delete buttons
+- Text input for new comments
+- Save/Cancel actions
+- Automatic positioning (falls back to left side if right edge is off-screen)
+
+**Implementation**: `floating-toolbar.js` handles selection detection and toolbar positioning. `comment-box.js` manages the comment UI and array-based storage. Both integrate with `highlighter.js` through callback handlers set in `content.js`.
+
+**Storage Strategy**: Comments are stored as arrays to support multiple notes per highlight. Empty arrays `[]` are properly handled to prevent false-positive comment indicators.
+
 ### Context Menu Integration
 
-**Multi-level Menus**: Chrome's context menu API is used to provide right-click access to summarization and highlighting features. The "Highlight Text" menu includes color sub-options (Yellow, Blue, Green, Pink) for quick highlight creation.
+**Multi-level Menus**: Chrome's context menu API provides backup right-click access to highlighting features. The "Highlight Text" menu includes color sub-options (Yellow 🟨, Blue 🟦) for quick highlight creation. Green and Pink options were removed to simplify the color palette.
 
 **Message Passing**: Context menu selections trigger background script messages to content scripts, which execute the requested action (create highlight, open overlay, etc.).
 

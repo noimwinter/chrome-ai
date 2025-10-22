@@ -147,11 +147,14 @@ class TextHighlighter {
       }
 
       // Add comment indicator if comment exists
-      if (data.comment) {
+      const hasComment = Array.isArray(data.comment) ? data.comment.length > 0 : !!data.comment;
+      if (hasComment) {
         const commentIcon = document.createElement('span');
         commentIcon.className = 'comment-icon';
         commentIcon.textContent = '💬';
-        commentIcon.title = data.comment;
+        const commentText = Array.isArray(data.comment) ? data.comment.join('\n') : data.comment;
+        commentIcon.title = commentText;
+        span.title = commentText;
         span.appendChild(commentIcon);
       }
 
