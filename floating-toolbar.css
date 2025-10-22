@@ -1,0 +1,62 @@
+.floating-toolbar {
+  position: absolute;
+  display: none;
+  flex-direction: row;
+  gap: 0;
+  background: #2c2c2c;
+  border-radius: 8px;
+  padding: 6px 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 999999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  animation: fadeInToolbar 0.2s ease-out;
+}
+
+@keyframes fadeInToolbar {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.toolbar-btn:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.btn-text {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.toolbar-btn + .toolbar-btn {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
