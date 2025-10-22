@@ -7,6 +7,11 @@ class TextHighlighter {
     this.storageKey = this.getStorageKey(this.currentUrl);
     this.colors = ['yellow', 'lightblue', 'lightgreen', 'pink', 'orange'];
     this.defaultColor = 'yellow';
+    this.commentBoxHandler = null;
+  }
+
+  setCommentBoxHandler(handler) {
+    this.commentBoxHandler = handler;
   }
 
   // Generate storage key from URL (include search and hash for uniqueness)
@@ -168,9 +173,15 @@ class TextHighlighter {
     const data = this.highlights.get(highlightId);
     if (!data) return;
 
-    const comment = prompt('Enter your comment:', data.comment || '');
-    if (comment !== null) {
-      this.updateComment(highlightId, comment);
+    if (this.commentBoxHandler && data.element) {
+      const rect = data.element.getBoundingClientRect();
+      const comments = Array.isArray(data.comment) ? data.comment : (data.comment ? [data.comment] : []);
+      this.commentBoxHandler(rect, comments, highlightId);
+    } else {
+      const comment = prompt('Enter your comment:', data.comment || '');
+      if (comment !== null) {
+        this.updateComment(highlightId, comment);
+      }
     }
   }
 
@@ -185,15 +196,18 @@ class TextHighlighter {
     const span = data.element;
     if (span) {
       let icon = span.querySelector('.comment-icon');
-      if (comment) {
+      const hasComment = Array.isArray(comment) ? comment.length > 0 : comment;
+      const commentText = Array.isArray(comment) ? comment.join('\n') : comment;
+      
+      if (hasComment) {
         if (!icon) {
           icon = document.createElement('span');
           icon.className = 'comment-icon';
           span.appendChild(icon);
         }
         icon.textContent = '💬';
-        icon.title = comment;
-        span.title = comment;
+        icon.title = commentText;
+        span.title = commentText;
       } else if (icon) {
         icon.remove();
         span.title = 'Click to add comment';

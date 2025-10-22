@@ -15,28 +15,14 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   chrome.contextMenus.create({
     id: "highlight-yellow",
     parentId: "highlight-text",
-    title: "Yellow",
+    title: "Yellow 🟨",
     contexts: ["selection"]
   });
   
   chrome.contextMenus.create({
     id: "highlight-blue",
     parentId: "highlight-text",
-    title: "Blue",
-    contexts: ["selection"]
-  });
-  
-  chrome.contextMenus.create({
-    id: "highlight-green",
-    parentId: "highlight-text",
-    title: "Green",
-    contexts: ["selection"]
-  });
-  
-  chrome.contextMenus.create({
-    id: "highlight-pink",
-    parentId: "highlight-text",
-    title: "Pink",
+    title: "Blue 🟦",
     contexts: ["selection"]
   });
 });
@@ -51,9 +37,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId.startsWith("highlight-")) {
     const colorMap = {
       "highlight-yellow": "yellow",
-      "highlight-blue": "lightblue",
-      "highlight-green": "lightgreen",
-      "highlight-pink": "pink"
+      "highlight-blue": "lightblue"
     };
     const color = colorMap[info.menuItemId];
     if (color) {

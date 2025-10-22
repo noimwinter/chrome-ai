@@ -7,6 +7,8 @@ const DEFAULT_SETTINGS = {
 
 let overlayIframe = null;
 let highlighter = null;
+let floatingToolbar = null;
+let commentBox = null;
 
 // Initialize highlighter when DOM is ready
 if (document.readyState === 'loading') {
@@ -19,6 +21,50 @@ function initHighlighter() {
   if (typeof TextHighlighter !== 'undefined') {
     highlighter = new TextHighlighter();
     highlighter.loadHighlights();
+  }
+  
+  if (typeof FloatingToolbar !== 'undefined') {
+    floatingToolbar = new FloatingToolbar({
+      onHighlight: (color) => {
+        if (highlighter) {
+          highlighter.createHighlightFromSelection(color);
+        }
+      },
+      onComment: () => {
+        if (highlighter && commentBox) {
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            
+            const highlightData = highlighter.createHighlightFromSelection('yellow');
+            if (highlightData) {
+              commentBox.show(rect, highlightData.comment ? [highlightData.comment] : [], highlightData.id);
+            }
+          }
+        }
+      },
+      onSummarize: () => {
+        toggleOverlay(true);
+      }
+    });
+  }
+  
+  if (typeof CommentBox !== 'undefined') {
+    commentBox = new CommentBox({
+      onSave: (comments, highlightId) => {
+        if (highlightId && highlighter) {
+          highlighter.updateComment(highlightId, comments);
+        }
+      },
+      onClose: () => {}
+    });
+    
+    if (highlighter) {
+      highlighter.setCommentBoxHandler((rect, comments, highlightId) => {
+        commentBox.show(rect, comments, highlightId);
+      });
+    }
   }
 }
 
