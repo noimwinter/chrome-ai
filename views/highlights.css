@@ -1,0 +1,16 @@
+#highlights-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #a0aec0;
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}

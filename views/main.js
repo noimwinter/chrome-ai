@@ -17,6 +17,10 @@ document.addEventListener("click", (e) => {
   if (e.target.closest("#btn-summarize-selection")) {
     window.parent.postMessage({ type: "REQUEST_EXTRACTION", mode: "selection" }, "*");
   }
+
+  if (e.target.closest("#btn-view-highlights")) {
+    window.loadView("views/highlights.html");
+  }
 });
 
 // Handle Extraction result

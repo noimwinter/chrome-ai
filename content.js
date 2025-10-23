@@ -6,11 +6,121 @@ const DEFAULT_SETTINGS = {
 };
 
 let overlayIframe = null;
+let highlighter = null;
+let floatingToolbar = null;
+let commentBox = null;
 
-chrome.runtime.onMessage.addListener((msg) => {
+// Initialize highlighter when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initHighlighter);
+} else {
+  initHighlighter();
+}
+
+function initHighlighter() {
+  if (typeof TextHighlighter !== 'undefined') {
+    highlighter = new TextHighlighter();
+    highlighter.loadHighlights();
+  }
+  
+  if (typeof FloatingToolbar !== 'undefined') {
+    floatingToolbar = new FloatingToolbar({
+      onHighlight: (color) => {
+        if (highlighter) {
+          highlighter.createHighlightFromSelection(color);
+        }
+      },
+      onComment: async () => {
+        if (highlighter && commentBox) {
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            
+            const highlightData = await highlighter.createHighlightFromSelection('yellow');
+            if (highlightData) {
+              commentBox.show(rect, highlightData.comment ? [highlightData.comment] : [], highlightData.id);
+            }
+          }
+        }
+      },
+      onSummarize: () => {
+        toggleOverlay(true);
+      }
+    });
+  }
+  
+  if (typeof CommentBox !== 'undefined') {
+    commentBox = new CommentBox({
+      onSave: (comments, highlightId) => {
+        if (highlightId && highlighter) {
+          highlighter.updateComment(highlightId, comments);
+        }
+      },
+      onClose: () => {}
+    });
+    
+    if (highlighter) {
+      highlighter.setCommentBoxHandler((rect, comments, highlightId) => {
+        commentBox.show(rect, comments, highlightId);
+      });
+    }
+  }
+}
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg?.type === "TOGGLE_OVERLAY") {
     toggleOverlay(msg.open ?? null);
+    sendResponse({ success: true });
   }
+  
+  if (msg?.type === "CREATE_HIGHLIGHT") {
+    if (highlighter) {
+      highlighter.createHighlightFromSelection(msg.color);
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false, error: "Highlighter not initialized" });
+    }
+  }
+  
+  if (msg?.type === "GET_HIGHLIGHTS") {
+    if (highlighter) {
+      const highlights = highlighter.getAllHighlights();
+      sendResponse({ highlights: highlights });
+    } else {
+      sendResponse({ highlights: [] });
+    }
+    return true;
+  }
+  
+  if (msg?.type === "DELETE_HIGHLIGHT") {
+    if (highlighter) {
+      highlighter.deleteHighlight(msg.highlightId);
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false });
+    }
+  }
+  
+  if (msg?.type === "UPDATE_COMMENT") {
+    if (highlighter) {
+      highlighter.updateComment(msg.highlightId, msg.comment);
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false });
+    }
+  }
+  
+  if (msg?.type === "CLEAR_ALL_HIGHLIGHTS") {
+    if (highlighter) {
+      highlighter.clearAllHighlights();
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false });
+    }
+  }
+  
+  return true;
 });
 
 function toggleOverlay(forceOpen = null) {
