@@ -95,6 +95,7 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -104,7 +105,99 @@
   0% {
     left: -100%;
   }
+
   100% {
     left: 100%;
+  }
+}
+
+/* Diagram Popup */
+.diagram-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.176);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2147483646;
+  backdrop-filter: blur(2px);
+  animation: popup-fade-in 0.2s ease-out;
+}
+
+.diagram-popup-content {
+  position: relative;
+  min-width: 1000px;
+  width: 50vw;
+  max-height: 80vh;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  padding: 24px;
+  animation: popup-scale-in 0.3s ease-out;
+}
+
+.diagram-popup-close {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  color: #666;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.diagram-popup-close:hover {
+  background: #f44336;
+  color: white;
+  border-color: #f44336;
+  transform: scale(1.1);
+}
+
+.diagram-popup-svg-wrapper {
+  max-width: 100%;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diagram-popup-svg-wrapper svg {
+  max-width: 100%;
+  height: auto;
+}
+
+@keyframes popup-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popup-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

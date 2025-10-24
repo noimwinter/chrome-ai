@@ -138,7 +138,7 @@ class FloatingToolbar {
     }
 
     this.hideToolbar();
-    this.currentSelection.removeAllRanges();
+    this.currentSelection = null;
   }
 
   hideToolbar() {

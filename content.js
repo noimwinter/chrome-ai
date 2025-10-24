@@ -151,7 +151,7 @@ function createOverlay() {
 
   overlayIframe.style.cssText = `
     position: fixed; top: 0; right: 0; width: 420px; height: 100vh;
-    border: 0; border-left: 1px solid #e5e7eb; z-index: 2147483647; background: #fff;
+    border: 0; border-left: 1px solid #e5e7eb; z-index: 2130000000; background: #fff;
     box-shadow: -2px 0 8px rgba(0,0,0,.1);
   `;
 
@@ -399,9 +399,55 @@ async function renderMermaid(renderResult) {
     const svgElement = tempDiv.querySelector("svg");
     
     contentDiv.appendChild(svgElement);
+
+    // Add click event to show popup
+    contentDiv.style.cursor = "pointer";
+    contentDiv.addEventListener("click", () => {
+      showDiagramPopup(renderResult.output);
+    });
   }
 
   overlayIframe?.contentWindow?.postMessage({ type: "DIAGRAM_COMPLETE" }, "*");
+}
+
+// Show diagram in a popup modal
+function showDiagramPopup(svgContent) {
+  const popup = document.createElement("div");
+  popup.className = "diagram-popup-overlay";
+
+  const popupContent = document.createElement("div");
+  popupContent.className = "diagram-popup-content";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "diagram-popup-close";
+  closeBtn.textContent = "✕";
+  closeBtn.onclick = () => popup.remove();
+
+  const svgWrapper = document.createElement("div");
+  svgWrapper.className = "diagram-popup-svg-wrapper";
+  svgWrapper.innerHTML = svgContent;
+
+  popupContent.appendChild(closeBtn);
+  popupContent.appendChild(svgWrapper);
+  popup.appendChild(popupContent);
+
+  // Close on overlay click
+  popup.addEventListener("click", (e) => {
+    if (e.target === popup) {
+      popup.remove();
+    }
+  });
+
+  // Close on Escape key
+  const handleEscape = (e) => {
+    if (e.key === "Escape") {
+      popup.remove();
+      document.removeEventListener("keydown", handleEscape);
+    }
+  };
+  document.addEventListener("keydown", handleEscape);
+
+  document.body.appendChild(popup);
 }
 
 // Show error message in visualization container
