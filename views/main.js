@@ -26,8 +26,12 @@ document.addEventListener("click", (e) => {
 // Handle Extraction result
 window.addEventListener("message", async (e) => {
   if (e.data?.type === "EXTRACTION_RESULT") {
-    const { paragraphs, mode, graphics = [] } = e.data.data || {};
-    const text = (paragraphs || []).map((p) => p.text).join("\n\n");
+    const payload  = e.data.data || {};
+    const graphics = payload.graphics || [];
+    const mode     = payload.mode;
+    const text = (typeof payload.text === "string" && payload.text.trim())
+      ? payload.text
+      : ((payload.paragraphs || []).map(p => p.text).join("\n\n"));
 
     document.getElementById("btn-summarize-page").disabled = true;
     document.getElementById("btn-summarize-selection").disabled = true;
@@ -39,7 +43,6 @@ window.addEventListener("message", async (e) => {
 
     requestSummarizeText(text, mode);
     requestGenerateMermaid(text);
-    // In case there's nothing to do (empty text), re-enable immediately
     maybeEnableButtons();
   }
 });
