@@ -1,0 +1,19 @@
+# OS / Editor
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Archives
+*.zip
+
+# Node-style junk if any future tooling
+node_modules/
+dist/
+build/
+
+# Chrome extension packed artifacts (if you create them)
+*.crx
+*.pem
+*.zip

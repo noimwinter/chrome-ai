@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Personal Summarizer",
+  "version": "0.1.1",
+  "description": "Personal Chrome Summarizer API demo.",
+  "permissions": ["activeTab", "scripting", "contextMenus", "storage"],
+  "host_permissions": ["http://*/*", "https://*/*", "<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["highlighter.js", "floating-toolbar.js", "comment-box.js", "content.js"],
+      "css": ["floating-toolbar.css", "comment-box.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["overlay.html", "overlay.js", "global.css", "highlighter.js", "floating-toolbar.js", "floating-toolbar.css", "comment-box.js", "comment-box.css", "views/*", "vendor/*", "prompts/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "commands": {
+    "toggle-overlay": {
+      "suggested_key": { "default": "Alt+S" },
+      "description": "Toggle overlay"
+    }
+  },
+  "action": { "default_title": "Open Overlay" }
+}

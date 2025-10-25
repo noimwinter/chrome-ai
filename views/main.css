@@ -1,0 +1,29 @@
+.settings-icon {
+  fill: #718096;
+  transition: fill 0.2s ease;
+}
+
+#btn-settings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: dimgray;
+  fill: dimgray;
+}
+
+#btn-settings:hover .settings-icon {
+  fill: #4a5568;
+}
+
+button#btn-close {
+  padding: 8px 12px;
+}
+
+/* Make embedded SVG responsive */
+#mermaid-diagram svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
