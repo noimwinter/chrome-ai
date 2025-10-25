@@ -338,7 +338,6 @@ function createVisualizationContainer(currentSelection) {
 
   const closeBtn = document.createElement("button");
   closeBtn.className = "visualization-close-btn";
-  closeBtn.textContent = "✕";
   closeBtn.onclick = () => {
     container.remove();
     if (currentVisualizationContainer === container) {
@@ -420,7 +419,6 @@ function showDiagramPopup(svgContent) {
 
   const closeBtn = document.createElement("button");
   closeBtn.className = "diagram-popup-close";
-  closeBtn.textContent = "✕";
   closeBtn.onclick = () => popup.remove();
 
   const svgWrapper = document.createElement("div");

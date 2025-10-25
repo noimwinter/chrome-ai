@@ -58,19 +58,38 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 14px;
-  color: #666;
-  font-weight: bold;
   transition: all 0.2s ease;
   z-index: 10;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.visualization-close-btn::before,
+.visualization-close-btn::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 2px;
+  background: #666;
+  transition: background 0.2s ease;
+}
+
+.visualization-close-btn::before {
+  transform: rotate(45deg);
+}
+
+.visualization-close-btn::after {
+  transform: rotate(-45deg);
+}
+
 .visualization-close-btn:hover {
   background: #f44336;
-  color: white;
   border-color: #f44336;
   transform: scale(1.1);
+}
+
+.visualization-close-btn:hover::before,
+.visualization-close-btn:hover::after {
+  background: white;
 }
 
 .visualization-loading-text {
@@ -152,19 +171,38 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 18px;
-  color: #666;
-  font-weight: bold;
   transition: all 0.2s ease;
   z-index: 10;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+.diagram-popup-close::before,
+.diagram-popup-close::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 2px;
+  background: #666;
+  transition: background 0.2s ease;
+}
+
+.diagram-popup-close::before {
+  transform: rotate(45deg);
+}
+
+.diagram-popup-close::after {
+  transform: rotate(-45deg);
+}
+
 .diagram-popup-close:hover {
   background: #f44336;
-  color: white;
   border-color: #f44336;
   transform: scale(1.1);
+}
+
+.diagram-popup-close:hover::before,
+.diagram-popup-close:hover::after {
+  background: white;
 }
 
 .diagram-popup-svg-wrapper {
