@@ -116,7 +116,7 @@ class TextHighlighter {
     return highlightData;
   }
 
-  // Apply highlight to DOM
+  // Apply highlight to DOM - Improved version for complex HTML structures
   applyHighlight(data) {
     try {
       const startNode = this.getNodeFromXPath(data.startPath);
@@ -131,44 +131,79 @@ class TextHighlighter {
       range.setStart(startNode, data.startOffset);
       range.setEnd(endNode, data.endOffset);
 
-      const span = document.createElement('span');
-      span.className = 'text-highlight';
-      span.style.backgroundColor = data.color;
-      span.dataset.highlightId = data.id;
-      span.title = data.comment || 'Click to add comment';
-
-      try {
-        range.surroundContents(span);
-      } catch (e) {
-        // If surroundContents fails (range spans multiple elements), use alternative
-        const contents = range.extractContents();
-        span.appendChild(contents);
-        range.insertNode(span);
+      // Try simple case first
+      if (startNode === endNode && startNode.parentNode === endNode.parentNode) {
+        return this.applySimpleHighlight(range, data);
       }
 
-      // Add comment indicator if comment exists
-      const hasComment = Array.isArray(data.comment) ? data.comment.length > 0 : !!data.comment;
-      if (hasComment) {
-        const commentIcon = document.createElement('span');
-        commentIcon.className = 'comment-icon';
-        commentIcon.textContent = '💬';
-        const commentText = Array.isArray(data.comment) ? data.comment.join('\n') : data.comment;
-        commentIcon.title = commentText;
-        span.title = commentText;
-        span.appendChild(commentIcon);
-      }
-
-      // Add click event for editing comment
-      span.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.showCommentDialog(data.id);
-      });
-
-      return span;
+      // Complex case: spanning multiple elements
+      return this.applyComplexHighlight(range, data);
     } catch (error) {
-      console.error('Error applying highlight:', error);
+      console.error('Error applying highlight:', error, data);
       return null;
     }
+  }
+
+  // Simple highlight (within same text node)
+  applySimpleHighlight(range, data) {
+    try {
+      const span = this.createHighlightSpan(data);
+      range.surroundContents(span);
+      this.addCommentIndicator(span, data);
+      this.addClickHandler(span, data.id);
+      return span;
+    } catch (e) {
+      // Fallback to complex method
+      return this.applyComplexHighlight(range, data);
+    }
+  }
+
+  // Complex highlight (spanning multiple elements)
+  applyComplexHighlight(range, data) {
+    try {
+      const span = this.createHighlightSpan(data);
+      const contents = range.extractContents();
+      span.appendChild(contents);
+      range.insertNode(span);
+      this.addCommentIndicator(span, data);
+      this.addClickHandler(span, data.id);
+      return span;
+    } catch (error) {
+      console.error('Error in complex highlight:', error);
+      return null;
+    }
+  }
+
+  // Create highlight span element
+  createHighlightSpan(data) {
+    const span = document.createElement('span');
+    span.className = 'text-highlight';
+    span.style.backgroundColor = data.color;
+    span.dataset.highlightId = data.id;
+    span.title = 'Click to add comment';
+    return span;
+  }
+
+  // Add comment indicator to span
+  addCommentIndicator(span, data) {
+    const hasComment = Array.isArray(data.comment) ? data.comment.length > 0 : !!data.comment;
+    if (hasComment) {
+      const commentIcon = document.createElement('span');
+      commentIcon.className = 'comment-icon';
+      commentIcon.textContent = '💬';
+      const commentText = Array.isArray(data.comment) ? data.comment.join('\n') : data.comment;
+      commentIcon.title = commentText;
+      span.title = commentText;
+      span.appendChild(commentIcon);
+    }
+  }
+
+  // Add click handler to span
+  addClickHandler(span, highlightId) {
+    span.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.showCommentDialog(highlightId);
+    });
   }
 
   // Show comment dialog
@@ -255,29 +290,49 @@ class TextHighlighter {
       timestamp: h.timestamp
     }));
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       chrome.storage.local.set({ [this.storageKey]: highlightsArray }, () => {
-        console.log('Saved highlights:', highlightsArray.length);
-        resolve();
+        if (chrome.runtime.lastError) {
+          console.error('Save error:', chrome.runtime.lastError);
+          reject(chrome.runtime.lastError);
+        } else {
+          console.log(`✅ Saved ${highlightsArray.length} highlights for key: ${this.storageKey}`);
+          console.log('Highlights data:', highlightsArray);
+          resolve();
+        }
       });
     });
   }
 
   // Load highlights from storage
   async loadHighlights() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      console.log(`🔍 Loading highlights for key: ${this.storageKey}`);
+      
       chrome.storage.local.get([this.storageKey], (result) => {
+        if (chrome.runtime.lastError) {
+          console.error('Load error:', chrome.runtime.lastError);
+          reject(chrome.runtime.lastError);
+          return;
+        }
+
         const highlightsArray = result[this.storageKey] || [];
-        console.log('Loaded highlights:', highlightsArray.length);
+        console.log(`✅ Loaded ${highlightsArray.length} highlights`);
+        console.log('Highlights data:', highlightsArray);
         
+        let successCount = 0;
         highlightsArray.forEach(data => {
           const element = this.applyHighlight(data);
           if (element) {
             this.highlights.set(data.id, { ...data, element });
+            successCount++;
+          } else {
+            console.warn('Failed to apply highlight:', data.id);
           }
         });
         
-        resolve(highlightsArray.length);
+        console.log(`Applied ${successCount} out of ${highlightsArray.length} highlights`);
+        resolve(successCount);
       });
     });
   }
