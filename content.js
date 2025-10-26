@@ -9,6 +9,7 @@ let overlayIframe = null;
 let highlighter = null;
 let floatingToolbar = null;
 let commentBox = null;
+let visualizationManager = null;
 let savedSelection = null;
 let currentVisualizationContainer = null;
 
@@ -83,6 +84,13 @@ function initHighlighter() {
     console.log('  window.debugHighlights.listHighlights() - List current highlights');
   }
 
+  if (typeof VisualizationManager !== "undefined") {
+    visualizationManager = new VisualizationManager();
+    visualizationManager.loadVisualizations();
+    
+    console.log('📊 VisualizationManager initialized');
+  }
+
   if (typeof FloatingToolbar !== "undefined") {
     floatingToolbar = new FloatingToolbar({
       onHighlight: (color) => {
@@ -113,7 +121,7 @@ function initHighlighter() {
         }
       },
       onVisualize: async (currentSelection) => {
-        currentVisualizationContainer = await createVisualizationContainer(currentSelection);
+        currentVisualizationContainer = await visualizationManager.createVisualizationContainer(currentSelection);
         requestDiagramGeneration(currentSelection.toString());
       }
     });
@@ -393,44 +401,6 @@ async function makeLanguageModel(systemPrompt) {
   });
 }
 
-// Create visualization container near the selection
-function createVisualizationContainer(currentSelection) {
-  const range = currentSelection.getRangeAt(0);
-
-  const container = document.createElement("div");
-  container.id = "visualization-container";
-
-  const content = document.createElement("div");
-  content.className = "visualization-content";
-
-  const skeleton = document.createElement("div");
-  skeleton.className = "visualization-skeleton";
-
-  const loadingText = document.createElement("span");
-  loadingText.className = "visualization-loading-text";
-  loadingText.textContent = "Generating diagram...";
-
-  const closeBtn = document.createElement("button");
-  closeBtn.className = "visualization-close-btn";
-  closeBtn.onclick = () => {
-    container.remove();
-    if (currentVisualizationContainer === container) {
-      currentVisualizationContainer = null;
-    }
-  };
-
-  skeleton.appendChild(loadingText);
-  content.appendChild(skeleton);
-  container.appendChild(content);
-  container.appendChild(closeBtn);
-
-  const insertRange = range.cloneRange();
-  insertRange.collapse(false);
-  insertRange.insertNode(container);
-
-  return container;
-}
-
 // Send a diagram generation request to the language model
 async function requestDiagramGeneration(text) {
   try {
@@ -462,65 +432,9 @@ async function renderMermaid(renderResult) {
   if (!renderResult.success) {
     showDiagramError();
   } else {
-    const skeleton = currentVisualizationContainer.querySelector(".visualization-content .visualization-skeleton");
-    skeleton.remove();
-
-    const closeBtn = currentVisualizationContainer.querySelector(".visualization-close-btn");
-    closeBtn.style.display = "flex";
-
-    const contentDiv = currentVisualizationContainer.querySelector(".visualization-content");
-
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = renderResult.output;
-    const svgElement = tempDiv.querySelector("svg");
-    
-    contentDiv.appendChild(svgElement);
-
-    // Add click event to show popup
-    contentDiv.style.cursor = "pointer";
-    contentDiv.addEventListener("click", () => {
-      showDiagramPopup(renderResult.output);
-    });
+    const vizId = currentVisualizationContainer.dataset.vizId;
+    await visualizationManager.updateVisualizationContent(vizId, renderResult.output);
   }
-}
-
-// Show diagram in a popup modal
-function showDiagramPopup(svgContent) {
-  const popup = document.createElement("div");
-  popup.id = "diagram-popup-overlay";
-
-  const popupContent = document.createElement("div");
-  popupContent.className = "diagram-popup-content";
-
-  const closeBtn = document.createElement("button");
-  closeBtn.className = "diagram-popup-close";
-  closeBtn.onclick = () => popup.remove();
-
-  const svgWrapper = document.createElement("div");
-  svgWrapper.className = "diagram-popup-svg-wrapper";
-  svgWrapper.innerHTML = svgContent;
-
-  popupContent.appendChild(closeBtn);
-  popupContent.appendChild(svgWrapper);
-  popup.appendChild(popupContent);
-
-  // Close on overlay click
-  popup.addEventListener("click", (e) => {
-    if (e.target === popup) {
-      popup.remove();
-    }
-  });
-
-  // Close on Escape key
-  const handleEscape = (e) => {
-    if (e.key === "Escape") {
-      popup.remove();
-      document.removeEventListener("keydown", handleEscape);
-    }
-  };
-  document.addEventListener("keydown", handleEscape);
-
-  document.body.appendChild(popup);
 }
 
 // Show error message in visualization container
@@ -534,11 +448,12 @@ function showDiagramError() {
 
   // Remove after 5 seconds
   setTimeout(() => {
-    currentVisualizationContainer.remove();
+    const vizId = currentVisualizationContainer.dataset.vizId;
+    visualizationManager.deleteVisualization(vizId);
     currentVisualizationContainer = null;
     // Re-enable visualize button
     if (floatingToolbar) {
       floatingToolbar.enableVisualizeButton();
     }
-  }, 5000);
+  }, 3000);
 }

@@ -146,12 +146,10 @@ class FloatingToolbar {
       case "summarize":
         this.disableSummarizeButton();
         this.onSummarize(this.currentSelection);
-        window.getSelection().removeAllRanges();
         break;
       case "visualize":
         this.disableVisualizeButton();
         this.onVisualize(this.currentSelection);
-        window.getSelection().removeAllRanges();
         break;
       case "comment":
         this.onComment();

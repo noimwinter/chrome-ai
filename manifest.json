@@ -9,14 +9,14 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["highlighter.js", "floating-toolbar.js", "comment-box.js", "content.js"],
+      "js": ["highlighter.js", "visualization-manager.js", "floating-toolbar.js", "comment-box.js", "content.js"],
       "css": ["content.css", "floating-toolbar.css", "comment-box.css"],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["overlay.html", "overlay.js", "overlay.css", "content.css", "highlighter.js", "floating-toolbar.js", "floating-toolbar.css", "comment-box.js", "comment-box.css", "views/*", "vendor/*", "prompts/*"],
+      "resources": ["overlay.html", "overlay.js", "overlay.css", "content.css", "highlighter.js", "visualization-manager.js", "floating-toolbar.js", "floating-toolbar.css", "comment-box.js", "comment-box.css", "views/*", "vendor/*", "prompts/*"],
       "matches": ["<all_urls>"]
     }
   ],
