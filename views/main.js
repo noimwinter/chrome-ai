@@ -26,12 +26,16 @@ document.addEventListener("click", (e) => {
 // Handle Extraction result
 window.addEventListener("message", async (e) => {
   if (e.data?.type === "EXTRACTION_RESULT") {
-    const { paragraphs, mode } = e.data.data || {};
-    const text = (paragraphs || []).map((p) => p.text).join("\n\n");
+    const payload  = e.data.data || {};
+    const graphics = payload.graphics || [];
+    const mode     = payload.mode;
+    const text = (typeof payload.text === "string" && payload.text.trim())
+      ? payload.text
+      : ((payload.paragraphs || []).map(p => p.text).join("\n\n"));
 
     setSummarizeButtonsEnabled(false);
     
-    requestSummarizeText(text, mode);
+    requestSummarizeText(mode, text, graphics);
   }
 });
 
@@ -81,15 +85,15 @@ function setSummarizeButtonsEnabled(isEnabled) {
 }
 
 // Summarize the given text
-async function requestSummarizeText(text, source) {
+async function requestSummarizeText(mode, text, graphics = []) {
   console.log("text to summarize : " + text);
 
   if (!text.trim()) {
-    document.getElementById("out").textContent = (source === "selection") ? "No text selected to summarize." : "No page content to summarize.";
+    document.getElementById("out").textContent = (mode === "selection") ? "No text selected to summarize." : "No page content to summarize.";
     return;
   }
 
-  document.getElementById("out").textContent = `Summarizing ${source}...`;
+  document.getElementById("out").textContent = `Summarizing ${mode}...`;
   const summaryLength = document.querySelector('input[name="len"]:checked').value;
-  window.parent.postMessage({ type: "REQUEST_SUMMARIZATION", summaryLength: summaryLength, text: text }, "*");
+  window.parent.postMessage({ type: "REQUEST_SUMMARIZATION", summaryLength: summaryLength, text: text, graphics: graphics }, "*");
 }

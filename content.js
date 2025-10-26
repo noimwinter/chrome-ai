@@ -113,11 +113,11 @@ function initHighlighter() {
         }
       },
       onSummarize: async (currentSelection) => {
-        savedSelection = currentSelection.toString();
+        savedSelection = currentSelection;
         if (overlayIframe === null) {
           toggleOverlay(true);
         } else {
-          overlayIframe?.contentWindow?.postMessage({ type: "EXTRACTION_RESULT", data: extractSelection() }, "*");
+          overlayIframe?.contentWindow?.postMessage({ type: "EXTRACTION_RESULT", data: extractContext("selection") }, "*");
         }
       },
       onVisualize: async (currentSelection) => {
@@ -226,33 +226,6 @@ function createOverlay() {
   document.documentElement.appendChild(overlayIframe);
 }
 
-function extractSelection() {
-  const text = savedSelection || (window.getSelection()?.toString() || "").trim();
-
-  return {
-    url: location.href,
-    title: document.title,
-    paragraphs: [{ text: text && text.length > 0 ? text : "" }],
-    mode: "selection",
-  };
-}
-
-// Simple extraction (text only)
-function extractPage() {
-  const containers = document.querySelectorAll("article, main, [role=main]");
-  const container = containers[0] || document.body;
-  const paragraphs = Array.from(container.querySelectorAll("p"))
-    .map((p) => p.innerText.trim())
-    .filter((t) => t.length > 30)
-    .map((text) => ({ text }));
-
-  return {
-    url: location.href,
-    title: document.title,
-    paragraphs,
-    mode: "page",
-  };
-}
 
 window.addEventListener("message", (e) => {
   const { type } = e.data || {};
@@ -281,15 +254,13 @@ window.addEventListener("message", (e) => {
 window.addEventListener("message", async (e) => {
   // Handle Extraction event
   if (e.data.type === "REQUEST_EXTRACTION") {
-    let data = e.data.mode === "selection" ? extractSelection() : extractPage();
-    overlayIframe?.contentWindow?.postMessage({ type: "EXTRACTION_RESULT", data }, "*");
+    overlayIframe?.contentWindow?.postMessage({ type: "EXTRACTION_RESULT", data: extractContext(e.data.mode) }, "*");
   }
 
   // Handle initial extraction request when overlay is ready
   if (e.data.type === "OVERLAY_READY") {
-    const hasSelection = savedSelection && savedSelection.length > 0;
-    if (hasSelection) {
-      overlayIframe?.contentWindow?.postMessage({ type: "EXTRACTION_RESULT", data: extractSelection() }, "*");
+    if (savedSelection) {
+      overlayIframe?.contentWindow?.postMessage({ type: "EXTRACTION_RESULT", data: extractContext("selection") }, "*");
     }
     savedSelection = null;
   }
@@ -299,25 +270,20 @@ window.addEventListener("message", async (e) => {
 window.addEventListener("message", async (e) => {
   if (e.data.type === "REQUEST_SUMMARIZATION") {
     try {
-      const summarizer = await makeSummarizer(e.data.summaryLength);
-      const result = await summarizer.summarize(e.data.text);
+      const { summaryType } = await chrome.storage.local.get({ summaryType: DEFAULT_SETTINGS.summaryType });
+
+      let result;
+      if (summaryType === "key-points") {
+        const summarizer = await makeSummarizer(e.data.summaryLength);
+        result = await summarizer.summarize(e.data.text);
+      } else {
+        const languageModel = await makeLanguageModel(await buildTLDRPrompt(e.data.graphics, e.data.summaryLength));
+        result = await languageModel.prompt("text:\n\n" + e.data.text);
+      }
+      
       overlayIframe?.contentWindow?.postMessage({ type: "SUMMARIZER_RESULT", result: result }, "*");
     } catch (err) {
       overlayIframe?.contentWindow?.postMessage({ type: "SUMMARIZER_ERROR", error: err.message || String(err) }, "*");
-      return;
-    }
-  }
-});
-
-// Handle Language Model events
-window.addEventListener("message", async (e) => {
-  if (e.data.type === "REQUEST_LANGUAGE_MODEL_PROMPT") {
-    try {
-      const languageModel = await makeLanguageModel();
-      const result = await languageModel.prompt(e.data.text);
-      overlayIframe?.contentWindow?.postMessage({ type: "LANGUAGE_MODEL_RESULT", result: result }, "*");
-    } catch (err) {
-      overlayIframe?.contentWindow?.postMessage({ type: "LANGUAGE_MODEL_ERROR", error: err.message || String(err) }, "*");
       return;
     }
   }
@@ -382,6 +348,58 @@ async function getDiagramPrompt() {
 
   getDiagramPrompt._cache = text;
   return text;
+}
+
+// Generate visuals context for prompt
+function visualsContextForPrompt(graphics = []) {
+  const hints = (graphics || [])
+    .map(g => {
+      if (g.kind === "svg-bar") return `Bar labels: ${g.labels?.join(", ")}`;
+      if (g.kind === "svg-pie") return `Pie segments: ${g.labels?.join(", ")}`;
+      if (g.kind === "table")  return `Table rows: ${g.rows?.length}`;
+      if (g.caption)           return `Caption: ${g.caption}`;
+      if (g.alt)               return `Image alt: ${g.alt}`;
+      return null;
+    })
+    .filter(Boolean)
+    .join(" | ");
+  return hints ? `Also consider visuals: ${hints}` : "";
+}
+
+async function buildTLDRPrompt(graphics, summaryLength) {
+  const vis = visualsContextForPrompt(graphics);
+
+  const lengthGuideMap = {
+    short: "Write a **very concise summary** (1-2 sentences).",
+    medium: "Write a **moderately detailed summary** (about 3-5 sentences).",
+    long: "Write a **comprehensive summary** (up to 8 sentences) with sufficient context.",
+  };
+  const lengthGuide = lengthGuideMap[summaryLength] || lengthGuideMap.medium;
+  
+  const { occupation } = await chrome.storage.local.get({ occupation: DEFAULT_SETTINGS.occupation });
+  const { customPrompt } = await chrome.storage.local.get({ customPrompt: DEFAULT_SETTINGS.customPrompt });
+
+  // occupation/customPrompt based sentence construction
+  let userContext = "";
+  if (occupation || customPrompt) {
+    const occText = occupation ? `Assume the reader is a **${occupation}**.` : "";
+    const customText = customPrompt
+      ? `Additionally, follow this custom instruction: "${customPrompt}".`
+      : "";
+    userContext = [occText, customText].filter(Boolean).join(" ");
+  }
+
+  return [
+    "You are a concise assistant.",
+    "Write the TL;DR summary in **Markdown format**.",
+    "Keep it factual and highlight key outcomes and implications.",
+    lengthGuide,
+    userContext ? `\n${userContext}` : null,
+    vis ? `\nVisual context:\n${vis}` : null,
+    "",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 // Create a language model instance
@@ -456,4 +474,136 @@ function showDiagramError() {
       floatingToolbar.enableVisualizeButton();
     }
   }, 3000);
+}
+
+// --- DOM helpers ---
+
+function getSelectedElement() {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return null;
+  const range = sel.getRangeAt(0);
+  const node = range.commonAncestorContainer;
+  return node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+}
+
+function getCaptionFor(el) {
+  const fig = el?.closest("figure, .figure, .ltx_figure");
+  const cap = fig?.querySelector("figcaption, .caption, [role=caption], .ltx_caption");
+  return cap?.innerText?.trim() || null;
+}
+
+function findNearbyElements(el, selectors = "figure, table, svg, canvas, img") {
+  if (!el) return [];
+  const figure = el.closest?.("figure, .figure, .ltx_figure");
+  const region =
+    figure ||
+    el.closest?.("article, main, [role=main]") ||
+    el.parentElement ||
+    document.body;
+
+  const elements = [];
+  if (figure) {
+    elements.push(figure);
+    elements.push(...Array.from(figure.querySelectorAll("svg, canvas, img, table")));
+    if (figure.previousElementSibling) elements.push(figure.previousElementSibling);
+    if (figure.nextElementSibling) elements.push(figure.nextElementSibling);
+  } else {
+    elements.push(...Array.from(region.querySelectorAll(selectors)).slice(0, 5));
+  }
+  return Array.from(new Set(elements)).slice(0, 6);
+}
+
+function extractElementData(el) {
+  const tag = (el.tagName || "").toLowerCase();
+
+  if (tag === "figure" || el.classList?.contains("figure") || el.classList?.contains("ltx_figure")) {
+    const visual = el.querySelector("svg, canvas, img, table");
+    if (visual) {
+      const inner = extractElementData(visual);
+      inner.caption = inner.caption || getCaptionFor(visual);
+      return inner;
+    }
+    return { kind: "figure", caption: getCaptionFor(el) || null };
+  }
+
+  if (tag === "svg") {
+    const caption = getCaptionFor(el);
+
+    const rects = Array.from(el.querySelectorAll("rect"));
+    if (rects.length) {
+      const labels = Array.from(el.querySelectorAll("text")).map(t => t.textContent.trim());
+      const values = rects.map(r => {
+        const h = parseFloat(r.getAttribute("height") || "0");
+        if (h) return h;
+        try { return r.getBBox?.().height || 0; } catch { return 0; }
+      });
+      if (values.some(v => v > 0)) {
+        return { kind: "svg-bar", labels: labels.slice(0, rects.length), values, caption };
+      }
+    }
+
+    const texts = Array.from(el.querySelectorAll("text")).map(t => t.textContent.trim());
+    const pct = texts
+      .map(tx => {
+        const m = tx.match(/([\d.]+)\s*%/);
+        return m ? { label: tx.replace(m[0], "").trim() || null, value: parseFloat(m[1]) } : null;
+      })
+      .filter(Boolean);
+    if (pct.length >= 3) {
+      return {
+        kind: "svg-pie",
+        labels: pct.map(p => p.label || `${p.value}%`),
+        values: pct.map(p => p.value),
+        caption
+      };
+    }
+
+    return { kind: "svg", text: texts.join(" "), caption };
+  }
+
+  if (tag === "table") {
+    const rows = Array.from(el.querySelectorAll("tr")).map(tr =>
+      Array.from(tr.querySelectorAll("th,td")).map(td => td.textContent.trim())
+    );
+    return { kind: "table", rows, caption: getCaptionFor(el) || null };
+  }
+
+  if (tag === "canvas") {
+    const legend =
+      el.parentElement?.querySelector(".legend, [role=legend], ul li")?.innerText?.trim() || null;
+    return { kind: "canvas", hint: legend, caption: getCaptionFor(el) || null };
+  }
+
+  if (tag === "img") {
+    return {
+      kind: "image",
+      src: el.currentSrc || el.src || null,
+      alt: el.alt || el.getAttribute("aria-label") || null,
+      caption: getCaptionFor(el) || null
+    };
+  }
+
+  const inner = el.querySelector?.("svg, canvas, img, table");
+  if (inner) return extractElementData(inner);
+
+  return { kind: "unknown", tag, note: "No recognizable visuals found here." };
+}
+
+function extractContext(mode /* "page" | "selection" */) {
+  const focusEl = mode === "page" ? document.body : (savedSelection || getSelectedElement());
+  const selectedText = mode === "page" ? "" : window.getSelection()?.toString().trim() || "";
+
+  const nearby = findNearbyElements(focusEl);
+  const graphics = nearby.map(extractElementData);
+
+  const textAround = focusEl.closest?.("article, main, [role=main]")?.innerText?.slice(0, 3000) || document.body.innerText.slice(0, 3000) || "";
+
+  return {
+    url: location.href,
+    title: document.title,
+    text: selectedText || textAround,
+    graphics,
+    imageCount: graphics.filter((g) => g.kind === "image").length,
+    mode,
+  };
 }
