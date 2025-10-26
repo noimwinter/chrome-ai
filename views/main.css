@@ -17,10 +17,6 @@
   fill: #4a5568;
 }
 
-button#btn-close {
-  padding: 8px 12px;
-}
-
 /* Make embedded SVG responsive */
 #mermaid-diagram svg {
   display: block;

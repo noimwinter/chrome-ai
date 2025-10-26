@@ -43,7 +43,7 @@ class CommentBox {
 
   createBox() {
     this.box = document.createElement('div');
-    this.box.className = 'comment-box';
+    this.box.id = 'extension-comment-box';
     this.box.innerHTML = `
       <div class="comment-box-header">
         <h3>💬 Comments</h3>

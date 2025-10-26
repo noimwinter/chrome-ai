@@ -1,5 +1,6 @@
 /* Visualization Container */
-.visualization-container {
+#visualization-container {
+  all: initial;
   width: 100%;
   margin: 16px 0;
   display: flex;
@@ -11,7 +12,7 @@
   position: relative;
 }
 
-.visualization-content {
+#visualization-container .visualization-content {
   width: 100%;
   min-height: 200px;
   position: relative;
@@ -22,7 +23,7 @@
   border-radius: 8px;
 }
 
-.visualization-skeleton {
+#visualization-container .visualization-skeleton {
   width: 100%;
   min-height: 200px;
   border-radius: 8px;
@@ -34,7 +35,7 @@
   animation: skeleton-loading 1.5s infinite;
 }
 
-.visualization-skeleton::before {
+#visualization-container .visualization-skeleton::before {
   content: '';
   position: absolute;
   top: 0;
@@ -45,7 +46,7 @@
   animation: skeleton-shimmer 2s infinite;
 }
 
-.visualization-close-btn {
+#visualization-container .visualization-close-btn {
   display: none;
   position: absolute;
   top: -8px;
@@ -63,8 +64,8 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.visualization-close-btn::before,
-.visualization-close-btn::after {
+#visualization-container .visualization-close-btn::before,
+#visualization-container .visualization-close-btn::after {
   content: '';
   position: absolute;
   width: 12px;
@@ -73,26 +74,26 @@
   transition: background 0.2s ease;
 }
 
-.visualization-close-btn::before {
+#visualization-container .visualization-close-btn::before {
   transform: rotate(45deg);
 }
 
-.visualization-close-btn::after {
+#visualization-container .visualization-close-btn::after {
   transform: rotate(-45deg);
 }
 
-.visualization-close-btn:hover {
+#visualization-container .visualization-close-btn:hover {
   background: #f44336;
   border-color: #f44336;
   transform: scale(1.1);
 }
 
-.visualization-close-btn:hover::before,
-.visualization-close-btn:hover::after {
+#visualization-container .visualization-close-btn:hover::before,
+#visualization-container .visualization-close-btn:hover::after {
   background: white;
 }
 
-.visualization-loading-text {
+#visualization-container .visualization-loading-text {
   font-size: 14px;
   color: #666;
   font-weight: 500;
@@ -100,7 +101,7 @@
   letter-spacing: 0.5px;
 }
 
-.visualization-error {
+#visualization-container .visualization-error {
   width: 100%;
   padding: 16px;
   border-radius: 8px;
@@ -131,7 +132,8 @@
 }
 
 /* Diagram Popup */
-.diagram-popup-overlay {
+#diagram-popup-overlay {
+  all: initial;
   position: fixed;
   top: 0;
   left: 0;
@@ -146,7 +148,7 @@
   animation: popup-fade-in 0.2s ease-out;
 }
 
-.diagram-popup-content {
+#diagram-popup-overlay .diagram-popup-content {
   position: relative;
   min-width: 1000px;
   width: 50vw;
@@ -158,7 +160,7 @@
   animation: popup-scale-in 0.3s ease-out;
 }
 
-.diagram-popup-close {
+#diagram-popup-overlay .diagram-popup-close {
   position: absolute;
   top: -12px;
   right: -12px;
@@ -176,8 +178,8 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.diagram-popup-close::before,
-.diagram-popup-close::after {
+#diagram-popup-overlay .diagram-popup-close::before,
+#diagram-popup-overlay .diagram-popup-close::after {
   content: '';
   position: absolute;
   width: 16px;
@@ -186,26 +188,26 @@
   transition: background 0.2s ease;
 }
 
-.diagram-popup-close::before {
+#diagram-popup-overlay .diagram-popup-close::before {
   transform: rotate(45deg);
 }
 
-.diagram-popup-close::after {
+#diagram-popup-overlay .diagram-popup-close::after {
   transform: rotate(-45deg);
 }
 
-.diagram-popup-close:hover {
+#diagram-popup-overlay .diagram-popup-close:hover {
   background: #f44336;
   border-color: #f44336;
   transform: scale(1.1);
 }
 
-.diagram-popup-close:hover::before,
-.diagram-popup-close:hover::after {
+#diagram-popup-overlay .diagram-popup-close:hover::before,
+#diagram-popup-overlay .diagram-popup-close:hover::after {
   background: white;
 }
 
-.diagram-popup-svg-wrapper {
+#diagram-popup-overlay .diagram-popup-svg-wrapper {
   max-width: 100%;
   overflow: auto;
   display: flex;
@@ -213,7 +215,7 @@
   justify-content: center;
 }
 
-.diagram-popup-svg-wrapper svg {
+#diagram-popup-overlay .diagram-popup-svg-wrapper svg {
   max-width: 100%;
   height: auto;
 }

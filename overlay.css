@@ -225,6 +225,12 @@ button.btn-secondary:hover {
   color: #2d3748;
 }
 
+button.nav-btn {
+  padding: 0;
+  height: 36px;
+  width: 36px;
+}
+
 /* Highlight Styles */
 .text-highlight {
   cursor: pointer;

@@ -399,7 +399,7 @@ function createVisualizationContainer(currentSelection) {
   const range = currentSelection.getRangeAt(0);
 
   const container = document.createElement("div");
-  container.className = "visualization-container";
+  container.id = "visualization-container";
 
   const content = document.createElement("div");
   content.className = "visualization-content";
@@ -488,7 +488,7 @@ async function renderMermaid(renderResult) {
 // Show diagram in a popup modal
 function showDiagramPopup(svgContent) {
   const popup = document.createElement("div");
-  popup.className = "diagram-popup-overlay";
+  popup.id = "diagram-popup-overlay";
 
   const popupContent = document.createElement("div");
   popupContent.className = "diagram-popup-content";

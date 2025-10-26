@@ -16,7 +16,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["overlay.html", "overlay.js", "global.css", "content.css", "highlighter.js", "floating-toolbar.js", "floating-toolbar.css", "comment-box.js", "comment-box.css", "views/*", "vendor/*", "prompts/*"],
+      "resources": ["overlay.html", "overlay.js", "overlay.css", "content.css", "highlighter.js", "floating-toolbar.js", "floating-toolbar.css", "comment-box.js", "comment-box.css", "views/*", "vendor/*", "prompts/*"],
       "matches": ["<all_urls>"]
     }
   ],

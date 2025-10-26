@@ -89,7 +89,7 @@ class FloatingToolbar {
 
   createToolbar() {
     this.toolbar = document.createElement('div');
-    this.toolbar.className = 'floating-toolbar';
+    this.toolbar.id = 'extension-floating-toolbar';
     this.toolbar.innerHTML = `
       <button class="toolbar-btn" data-action="highlight-yellow">
         <span class="btn-icon">🟨</span>
