@@ -113,7 +113,6 @@ function initHighlighter() {
         }
       },
       onVisualize: async (currentSelection) => {
-        savedSelection = currentSelection.toString();
         currentVisualizationContainer = await createVisualizationContainer(currentSelection);
         requestDiagramGeneration(currentSelection.toString());
       }
@@ -526,11 +525,6 @@ function showDiagramPopup(svgContent) {
 
 // Show error message in visualization container
 function showDiagramError() {
-  // Re-enable visualize button
-  if (floatingToolbar) {
-    floatingToolbar.enableVisualizeButton();
-  }
-
   const errorDiv = document.createElement("div");
   errorDiv.className = "visualization-error";
   errorDiv.textContent = "Diagram generation failed";
@@ -542,5 +536,9 @@ function showDiagramError() {
   setTimeout(() => {
     currentVisualizationContainer.remove();
     currentVisualizationContainer = null;
+    // Re-enable visualize button
+    if (floatingToolbar) {
+      floatingToolbar.enableVisualizeButton();
+    }
   }, 5000);
 }

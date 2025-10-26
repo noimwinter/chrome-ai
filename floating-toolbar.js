@@ -4,35 +4,44 @@ class FloatingToolbar {
     this.onComment = options.onComment || (() => {});
     this.onSummarize = options.onSummarize || (() => {});
     this.onVisualize = options.onVisualize || (() => {});
-    
+
     this.toolbar = null;
     this.currentSelection = null;
     this.isVisible = false;
-    
+
     this.init();
   }
 
   init() {
-    document.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-    document.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-    document.addEventListener('selectionchange', () => this.handleSelectionChange());
+    document.addEventListener("mouseup", (e) => this.handleMouseUp(e));
+    document.addEventListener("mousedown", (e) => this.handleMouseDown(e));
+    document.addEventListener("selectionchange", () => this.handleSelectionChange());
   }
 
   handleMouseUp(e) {
-    if (this.toolbar && this.toolbar.contains(e.target)) {
-      return;
-    }
+    if (this.toolbar && this.toolbar.contains(e.target)) return;
 
     setTimeout(() => {
       const selection = window.getSelection();
       const text = selection.toString().trim();
 
-      if (text.length > 0) {
-        this.currentSelection = selection;
-        this.showToolbar(selection);
-      } else {
+      if (text.length === 0) {
         this.hideToolbar();
+        return;
       }
+
+      const anchorNode = selection.anchorNode;
+      const rootEl = anchorNode.nodeType === Node.TEXT_NODE ? anchorNode.parentElement : anchorNode;
+
+      const hasEditableDescendant = rootEl.closest?.('input, textarea, [contenteditable="true"]') || rootEl.querySelector?.('input, textarea, [contenteditable="true"]');
+
+      if (hasEditableDescendant) {
+        this.hideToolbar();
+        return;
+      }
+
+      this.currentSelection = selection;
+      this.showToolbar(selection);
     }, 10);
   }
 
@@ -68,7 +77,7 @@ class FloatingToolbar {
     const spacing = 8;
 
     let top = rect.top + window.scrollY - toolbarHeight - spacing;
-    let left = rect.left + window.scrollX + (rect.width / 2) - (toolbarWidth / 2);
+    let left = rect.left + window.scrollX + rect.width / 2 - toolbarWidth / 2;
 
     if (top < window.scrollY) {
       top = rect.bottom + window.scrollY + spacing;
@@ -83,13 +92,13 @@ class FloatingToolbar {
 
     this.toolbar.style.top = `${top}px`;
     this.toolbar.style.left = `${left}px`;
-    this.toolbar.style.display = 'flex';
+    this.toolbar.style.display = "flex";
     this.isVisible = true;
   }
 
   createToolbar() {
-    this.toolbar = document.createElement('div');
-    this.toolbar.id = 'extension-floating-toolbar';
+    this.toolbar = document.createElement("div");
+    this.toolbar.id = "extension-floating-toolbar";
     this.toolbar.innerHTML = `
       <button class="toolbar-btn" data-action="highlight-yellow">
         <span class="btn-icon">🟨</span>
@@ -113,8 +122,8 @@ class FloatingToolbar {
       </button>
     `;
 
-    this.toolbar.addEventListener('click', (e) => {
-      const btn = e.target.closest('.toolbar-btn');
+    this.toolbar.addEventListener("click", (e) => {
+      const btn = e.target.closest(".toolbar-btn");
       if (btn) {
         const action = btn.dataset.action;
         this.handleAction(action);
@@ -126,23 +135,25 @@ class FloatingToolbar {
 
   handleAction(action) {
     if (!this.currentSelection) return;
-    
+
     switch (action) {
-      case 'highlight-yellow':
-        this.onHighlight('yellow');
+      case "highlight-yellow":
+        this.onHighlight("yellow");
         break;
-      case 'highlight-blue':
-        this.onHighlight('lightblue');
+      case "highlight-blue":
+        this.onHighlight("lightblue");
         break;
-      case 'summarize':
+      case "summarize":
         this.disableSummarizeButton();
         this.onSummarize(this.currentSelection);
+        window.getSelection().removeAllRanges();
         break;
-      case 'visualize':
+      case "visualize":
         this.disableVisualizeButton();
         this.onVisualize(this.currentSelection);
+        window.getSelection().removeAllRanges();
         break;
-      case 'comment':
+      case "comment":
         this.onComment();
         break;
     }
@@ -156,7 +167,7 @@ class FloatingToolbar {
       const summarizeBtn = this.toolbar.querySelector('[data-action="summarize"]');
       if (summarizeBtn) {
         summarizeBtn.disabled = true;
-        summarizeBtn.classList.add('disabled');
+        summarizeBtn.classList.add("disabled");
       }
     }
   }
@@ -166,7 +177,7 @@ class FloatingToolbar {
       const summarizeBtn = this.toolbar.querySelector('[data-action="summarize"]');
       if (summarizeBtn) {
         summarizeBtn.disabled = false;
-        summarizeBtn.classList.remove('disabled');
+        summarizeBtn.classList.remove("disabled");
       }
     }
   }
@@ -176,7 +187,7 @@ class FloatingToolbar {
       const visualizeBtn = this.toolbar.querySelector('[data-action="visualize"]');
       if (visualizeBtn) {
         visualizeBtn.disabled = true;
-        visualizeBtn.classList.add('disabled');
+        visualizeBtn.classList.add("disabled");
       }
     }
   }
@@ -186,14 +197,14 @@ class FloatingToolbar {
       const visualizeBtn = this.toolbar.querySelector('[data-action="visualize"]');
       if (visualizeBtn) {
         visualizeBtn.disabled = false;
-        visualizeBtn.classList.remove('disabled');
+        visualizeBtn.classList.remove("disabled");
       }
     }
   }
 
   hideToolbar() {
     if (this.toolbar) {
-      this.toolbar.style.display = 'none';
+      this.toolbar.style.display = "none";
       this.isVisible = false;
     }
     this.currentSelection = null;
