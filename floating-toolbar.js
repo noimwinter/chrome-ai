@@ -121,7 +121,7 @@ class FloatingToolbar {
 
   handleAction(action) {
     if (!this.currentSelection) return;
-
+    
     switch (action) {
       case 'highlight-yellow':
         this.onHighlight('yellow');
@@ -130,7 +130,7 @@ class FloatingToolbar {
         this.onHighlight('lightblue');
         break;
       case 'summarize':
-        this.onSummarize();
+        this.onSummarize(this.currentSelection);
         break;
       case 'comment':
         this.onComment();
@@ -138,6 +138,7 @@ class FloatingToolbar {
     }
 
     this.hideToolbar();
+    this.currentSelection = null;
   }
 
   hideToolbar() {

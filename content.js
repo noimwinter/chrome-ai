@@ -9,16 +9,18 @@ let overlayIframe = null;
 let highlighter = null;
 let floatingToolbar = null;
 let commentBox = null;
+let savedSelection = null;
+let currentVisualizationContainer = null;
 
 // Initialize highlighter when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initHighlighter);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initHighlighter);
 } else {
   initHighlighter();
 }
 
 function initHighlighter() {
-  if (typeof TextHighlighter !== 'undefined') {
+  if (typeof TextHighlighter !== "undefined") {
     highlighter = new TextHighlighter();
     highlighter.loadHighlights();
     
@@ -80,8 +82,8 @@ function initHighlighter() {
     console.log('  window.debugHighlights.clearAll() - Clear all highlights');
     console.log('  window.debugHighlights.listHighlights() - List current highlights');
   }
-  
-  if (typeof FloatingToolbar !== 'undefined') {
+
+  if (typeof FloatingToolbar !== "undefined") {
     floatingToolbar = new FloatingToolbar({
       onHighlight: (color) => {
         if (highlighter) {
@@ -94,30 +96,37 @@ function initHighlighter() {
           if (selection && selection.rangeCount > 0) {
             const range = selection.getRangeAt(0);
             const rect = range.getBoundingClientRect();
-            
-            const highlightData = await highlighter.createHighlightFromSelection('yellow');
+
+            const highlightData = await highlighter.createHighlightFromSelection("yellow");
             if (highlightData) {
               commentBox.show(rect, highlightData.comment ? [highlightData.comment] : [], highlightData.id);
             }
           }
         }
       },
-      onSummarize: () => {
-        toggleOverlay(true);
-      }
+      onSummarize: async (currentSelection) => {
+        savedSelection = currentSelection.toString();
+        currentVisualizationContainer = await createVisualizationContainer(currentSelection);
+        requestDiagramGeneration(currentSelection.toString());
+        if (overlayIframe === null) {
+          toggleOverlay(true);
+        } else {
+          overlayIframe?.contentWindow?.postMessage({ type: "EXTRACTION_RESULT", data: extractSelection() }, "*");
+        }
+      },
     });
   }
-  
-  if (typeof CommentBox !== 'undefined') {
+
+  if (typeof CommentBox !== "undefined") {
     commentBox = new CommentBox({
       onSave: (comments, highlightId) => {
         if (highlightId && highlighter) {
           highlighter.updateComment(highlightId, comments);
         }
       },
-      onClose: () => {}
+      onClose: () => {},
     });
-    
+
     if (highlighter) {
       highlighter.setCommentBoxHandler((rect, comments, highlightId) => {
         commentBox.show(rect, comments, highlightId);
@@ -131,7 +140,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     toggleOverlay(msg.open ?? null);
     sendResponse({ success: true });
   }
-  
+
   if (msg?.type === "CREATE_HIGHLIGHT") {
     if (highlighter) {
       highlighter.createHighlightFromSelection(msg.color);
@@ -140,7 +149,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ success: false, error: "Highlighter not initialized" });
     }
   }
-  
+
   if (msg?.type === "GET_HIGHLIGHTS") {
     if (highlighter) {
       const highlights = highlighter.getAllHighlights();
@@ -150,7 +159,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
     return true;
   }
-  
+
   if (msg?.type === "DELETE_HIGHLIGHT") {
     if (highlighter) {
       highlighter.deleteHighlight(msg.highlightId);
@@ -159,7 +168,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ success: false });
     }
   }
-  
+
   if (msg?.type === "UPDATE_COMMENT") {
     if (highlighter) {
       highlighter.updateComment(msg.highlightId, msg.comment);
@@ -168,7 +177,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ success: false });
     }
   }
-  
+
   if (msg?.type === "CLEAR_ALL_HIGHLIGHTS") {
     if (highlighter) {
       highlighter.clearAllHighlights();
@@ -177,7 +186,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ success: false });
     }
   }
-  
+
   return true;
 });
 
@@ -197,30 +206,24 @@ function toggleOverlay(forceOpen = null) {
 function createOverlay() {
   overlayIframe = document.createElement("iframe");
   overlayIframe.src = chrome.runtime.getURL("overlay.html");
-  overlayIframe.allow = 'summarizer';  
+
   overlayIframe.style.cssText = `
     position: fixed; top: 0; right: 0; width: 420px; height: 100vh;
-    border: 0; border-left: 1px solid #e5e7eb; z-index: 2147483647; background: #fff;
+    border: 0; border-left: 1px solid #e5e7eb; z-index: 2130000000; background: #fff;
     box-shadow: -2px 0 8px rgba(0,0,0,.1);
   `;
 
-  overlayIframe.addEventListener("load", () => {
-    // send initial extraction as soon as overlay is ready
-    const hasSelection = window.getSelection()?.toString().trim().length > 0;
-    const result = hasSelection ? extractSelection() : extractPage();
-    overlayIframe.contentWindow?.postMessage({ type: "EXTRACTION_RESULT", data: result }, "*");
-  });
-  
   document.documentElement.appendChild(overlayIframe);
 }
 
 function extractSelection() {
-  const text = (window.getSelection()?.toString() || "").trim();
+  const text = savedSelection || (window.getSelection()?.toString() || "").trim();
+
   return {
     url: location.href,
     title: document.title,
-    paragraphs: [{ text: (text && text.length > 0) ? text : "" }],
-    mode: "selection"
+    paragraphs: [{ text: text && text.length > 0 ? text : "" }],
+    mode: "selection",
   };
 }
 
@@ -229,15 +232,15 @@ function extractPage() {
   const containers = document.querySelectorAll("article, main, [role=main]");
   const container = containers[0] || document.body;
   const paragraphs = Array.from(container.querySelectorAll("p"))
-    .map(p => p.innerText.trim())
-    .filter(t => t.length > 30)
-    .map(text => ({ text }));
+    .map((p) => p.innerText.trim())
+    .filter((t) => t.length > 30)
+    .map((text) => ({ text }));
 
-  return { 
-    url: location.href, 
-    title: document.title, 
+  return {
+    url: location.href,
+    title: document.title,
     paragraphs,
-    mode: "page"
+    mode: "page",
   };
 }
 
@@ -247,14 +250,24 @@ window.addEventListener("message", (e) => {
   if (type === "CLOSE_OVERLAY") {
     overlayIframe?.remove();
     overlayIframe = null;
+    savedSelection = null;
   }
 });
 
-// Handle Extraction event
 window.addEventListener("message", async (e) => {
+  // Handle Extraction event
   if (e.data.type === "REQUEST_EXTRACTION") {
     let data = e.data.mode === "selection" ? extractSelection() : extractPage();
     overlayIframe?.contentWindow?.postMessage({ type: "EXTRACTION_RESULT", data }, "*");
+  }
+
+  // Handle initial extraction request when overlay is ready
+  if (e.data.type === "OVERLAY_READY") {
+    const hasSelection = savedSelection && savedSelection.length > 0;
+    if (hasSelection) {
+      overlayIframe?.contentWindow?.postMessage({ type: "EXTRACTION_RESULT", data: extractSelection() }, "*");
+    }
+    savedSelection = null;
   }
 });
 
@@ -274,15 +287,22 @@ window.addEventListener("message", async (e) => {
 
 // Handle Language Model events
 window.addEventListener("message", async (e) => {
-  if (e.data.type === 'REQUEST_LANGUAGE_MODEL_PROMPT') {
+  if (e.data.type === "REQUEST_LANGUAGE_MODEL_PROMPT") {
     try {
       const languageModel = await makeLanguageModel();
       const result = await languageModel.prompt(e.data.text);
-      overlayIframe?.contentWindow?.postMessage({ type: 'LANGUAGE_MODEL_RESULT', result: result }, '*');
+      overlayIframe?.contentWindow?.postMessage({ type: "LANGUAGE_MODEL_RESULT", result: result }, "*");
     } catch (err) {
-      overlayIframe?.contentWindow?.postMessage({ type: 'LANGUAGE_MODEL_ERROR', error: err.message || String(err) }, '*');
+      overlayIframe?.contentWindow?.postMessage({ type: "LANGUAGE_MODEL_ERROR", error: err.message || String(err) }, "*");
       return;
     }
+  }
+});
+
+// Handle Mermaid event
+window.addEventListener("message", async (e) => {
+  if (e.data?.type === "MERMAID_RENDER_RESULT") {
+    renderMermaid(e.data.result);
   }
 });
 
@@ -322,39 +342,182 @@ async function makeSummarizer(summaryLength) {
     monitor(m) {
       m.addEventListener("downloadprogress", (e) => {
         const progress = Math.round(e.loaded * 100);
-        overlayIframe?.contentWindow?.postMessage({ type: 'SUMMARIZER_PROGRESS', progress: progress }, '*');
+        overlayIframe?.contentWindow?.postMessage({ type: "SUMMARIZER_PROGRESS", progress: progress }, "*");
       });
     },
   });
 }
 
-// Get the language model system prompt
-async function getLanguageModelSystemPrompt() {
-  if (getLanguageModelSystemPrompt._cache) return getLanguageModelSystemPrompt._cache;
+// Get the system prompt for diagram generation
+async function getDiagramPrompt() {
+  if (getDiagramPrompt._cache) return getDiagramPrompt._cache;
 
-  const url = chrome.runtime.getURL('prompts/language-model-system.md');
-  const res = await fetch(url, { cache: 'no-cache' });
+  const url = chrome.runtime.getURL("prompts/diagram-system.md");
+  const res = await fetch(url, { cache: "no-cache" });
   const text = await res.text();
 
-  getLanguageModelSystemPrompt._cache = text;
+  getDiagramPrompt._cache = text;
   return text;
 }
 
 // Create a language model instance
-async function makeLanguageModel() {
+async function makeLanguageModel(systemPrompt) {
   if (!("LanguageModel" in self)) throw new Error("LanguageModel API not supported in this Chrome.");
   const availability = await LanguageModel.availability();
   if (availability === "unavailable") throw new Error("LanguageModel unavailable on this device/browser.");
 
   return await LanguageModel.create({
-    initialPrompts: [
-      { role: 'system', content: await getLanguageModelSystemPrompt() },
-    ],
+    initialPrompts: [{ role: "system", content: systemPrompt }],
     monitor(m) {
       m.addEventListener("downloadprogress", (e) => {
         const progress = Math.round(e.loaded * 100);
-        overlayIframe?.contentWindow?.postMessage({ type: 'LANGUAGE_MODEL_PROGRESS', progress: progress }, '*');
+        overlayIframe?.contentWindow?.postMessage({ type: "LANGUAGE_MODEL_PROGRESS", progress: progress }, "*");
       });
     },
   });
+}
+
+// Create visualization container near the selection
+function createVisualizationContainer(currentSelection) {
+  const range = currentSelection.getRangeAt(0);
+
+  const container = document.createElement("div");
+  container.className = "visualization-container";
+
+  const content = document.createElement("div");
+  content.className = "visualization-content";
+
+  const skeleton = document.createElement("div");
+  skeleton.className = "visualization-skeleton";
+
+  const loadingText = document.createElement("span");
+  loadingText.className = "visualization-loading-text";
+  loadingText.textContent = "Generating diagram...";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "visualization-close-btn";
+  closeBtn.onclick = () => {
+    container.remove();
+    if (currentVisualizationContainer === container) {
+      currentVisualizationContainer = null;
+    }
+  };
+
+  skeleton.appendChild(loadingText);
+  content.appendChild(skeleton);
+  container.appendChild(content);
+  container.appendChild(closeBtn);
+
+  const insertRange = range.cloneRange();
+  insertRange.collapse(false);
+  insertRange.insertNode(container);
+
+  return container;
+}
+
+// Send a diagram generation request to the language model
+async function requestDiagramGeneration(text) {
+  try {
+    overlayIframe?.contentWindow?.postMessage({ type: "DIAGRAM_PROGRESS" }, "*");
+    const languageModel = await makeLanguageModel(await getDiagramPrompt());
+    const result = await languageModel.prompt("Generate a Mermaid diagram for the following text:\n\n" + text);
+
+    const mermaidSyntax = result.match(/```mermaid\s*([\s\S]*?)```/i);
+    if (!mermaidSyntax) {
+      throw new Error("No valid Mermaid syntax found");
+    }
+
+    const mermaidCode = mermaidSyntax[1];
+
+    // The content script cannot directly use mermaid.js because it's running in an isolated world.
+    // Therefore, the diagram rendering request is sent to overlay.js, which has access to mermaid.
+    overlayIframe?.contentWindow?.postMessage({ type: "MERMAID_RENDER_REQUEST", mermaidCode: mermaidCode }, "*");
+  } catch (err) {
+    console.error("Diagram generation error:", err);
+    showDiagramError();
+  }
+}
+
+// Render Mermaid diagram in visualization container
+async function renderMermaid(renderResult) {
+  if (!renderResult.success) {
+    showDiagramError();
+  } else {
+    const skeleton = currentVisualizationContainer.querySelector(".visualization-content .visualization-skeleton");
+    skeleton.remove();
+
+    const closeBtn = currentVisualizationContainer.querySelector(".visualization-close-btn");
+    closeBtn.style.display = "flex";
+
+    const contentDiv = currentVisualizationContainer.querySelector(".visualization-content");
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = renderResult.output;
+    const svgElement = tempDiv.querySelector("svg");
+    
+    contentDiv.appendChild(svgElement);
+
+    // Add click event to show popup
+    contentDiv.style.cursor = "pointer";
+    contentDiv.addEventListener("click", () => {
+      showDiagramPopup(renderResult.output);
+    });
+  }
+
+  overlayIframe?.contentWindow?.postMessage({ type: "DIAGRAM_COMPLETE" }, "*");
+}
+
+// Show diagram in a popup modal
+function showDiagramPopup(svgContent) {
+  const popup = document.createElement("div");
+  popup.className = "diagram-popup-overlay";
+
+  const popupContent = document.createElement("div");
+  popupContent.className = "diagram-popup-content";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "diagram-popup-close";
+  closeBtn.onclick = () => popup.remove();
+
+  const svgWrapper = document.createElement("div");
+  svgWrapper.className = "diagram-popup-svg-wrapper";
+  svgWrapper.innerHTML = svgContent;
+
+  popupContent.appendChild(closeBtn);
+  popupContent.appendChild(svgWrapper);
+  popup.appendChild(popupContent);
+
+  // Close on overlay click
+  popup.addEventListener("click", (e) => {
+    if (e.target === popup) {
+      popup.remove();
+    }
+  });
+
+  // Close on Escape key
+  const handleEscape = (e) => {
+    if (e.key === "Escape") {
+      popup.remove();
+      document.removeEventListener("keydown", handleEscape);
+    }
+  };
+  document.addEventListener("keydown", handleEscape);
+
+  document.body.appendChild(popup);
+}
+
+// Show error message in visualization container
+function showDiagramError() {
+  const errorDiv = document.createElement("div");
+  errorDiv.className = "visualization-error";
+  errorDiv.textContent = "Diagram generation failed";
+
+  currentVisualizationContainer.innerHTML = "";
+  currentVisualizationContainer.appendChild(errorDiv);
+
+  // Remove after 5 seconds
+  setTimeout(() => {
+    currentVisualizationContainer.remove();
+    currentVisualizationContainer = null;
+  }, 5000);
 }

@@ -1,6 +1,9 @@
 let _pendingSummarizer = false;
 let _pendingDiagram = false;
 
+// Post message to parent that overlay with main.html is ready
+window.parent.postMessage({ type: "OVERLAY_READY" }, "*");
+
 document.addEventListener("click", (e) => {
   if (e.target.closest("#btn-close")) {
     window.parent.postMessage({ type: "CLOSE_OVERLAY" }, "*");
@@ -34,10 +37,9 @@ window.addEventListener("message", async (e) => {
 
     const hasText = !!text && text.trim().length > 0;
     _pendingSummarizer = hasText;
-    _pendingDiagram = hasText;
 
     requestSummarizeText(text, mode);
-    requestGenerateMermaid(text);
+    
     // In case there's nothing to do (empty text), re-enable immediately
     maybeEnableButtons();
   }
@@ -68,16 +70,15 @@ window.addEventListener("message", async (e) => {
   if (e.data?.type === "LANGUAGE_MODEL_PROGRESS") {
     document.getElementById("language-model-status").textContent = e.data.progress === 0 || e.data.progress === 100 ? "" : `Downloading LanguageModel : ${e.data.progress}%`;
   }
+});
 
-  if (e.data?.type === "LANGUAGE_MODEL_RESULT") {
-    await renderMermaid(e.data.result);
-    _pendingDiagram = false;
-    maybeEnableButtons();
+// Handle Diagram events
+window.addEventListener("message", async (e) => {
+  if (e.data?.type === "DIAGRAM_PROGRESS") {
+    _pendingDiagram = true;
   }
 
-  if (e.data?.type === "LANGUAGE_MODEL_ERROR") {
-    document.getElementById("mermaid-diagram").classList.remove("hidden");
-    document.getElementById("mermaid-diagram").textContent = "error: " + e.data.error;
+  if (e.data?.type === "DIAGRAM_COMPLETE") {
     _pendingDiagram = false;
     maybeEnableButtons();
   }
@@ -103,39 +104,4 @@ async function requestSummarizeText(text, source) {
   document.getElementById("out").textContent = `Summarizing ${source}...`;
   const summaryLength = document.querySelector('input[name="len"]:checked').value;
   window.parent.postMessage({ type: "REQUEST_SUMMARIZATION", summaryLength: summaryLength, text: text }, "*");
-}
-
-// request Mermaid diagram generation
-async function requestGenerateMermaid(text) {
-  const container = document.getElementById("mermaid-diagram");
-  container.classList.add("hidden");
-
-  if (!text.trim()) return;
-
-  window.parent.postMessage({ type: 'REQUEST_LANGUAGE_MODEL_PROMPT', text: 'Generate a Mermaid diagram for the following text:\n\n' + text }, '*');
-}
-
-// Render Mermaid diagram
-async function renderMermaid(text) {
-  const container = document.getElementById("mermaid-diagram");
-
-  const mermaidSyntax = text.match(/```mermaid\s*([\s\S]*?)```/i);
-  if (!mermaidSyntax) return;
-  text = mermaidSyntax[1];
-
-  try {
-    const renderId = "mermaid-" + Math.random().toString(36).slice(2);
-    const out = await window.mermaid.render(renderId, text.trim());
-    if (out && typeof out.svg === "string") {
-      container.innerHTML = out.svg;
-    } else if (typeof out === "string") {
-      container.innerHTML = out;
-    } else {
-      container.textContent = "Failed to render Mermaid diagram.";
-    }
-  } catch (err) {
-    container.textContent = "Mermaid render error: " + (err && err.message ? err.message : err);
-  } finally {
-    container.classList.remove("hidden");
-  }
 }
