@@ -3,7 +3,7 @@
   "name": "Personal Summarizer",
   "version": "0.1.1",
   "description": "Personal Chrome Summarizer API demo.",
-  "permissions": ["activeTab", "scripting", "contextMenus", "storage"],
+  "permissions": ["offscreen", "activeTab", "scripting", "contextMenus", "storage"],
   "host_permissions": ["http://*/*", "https://*/*", "<all_urls>"],
   "background": { "service_worker": "background.js" },
   "content_scripts": [

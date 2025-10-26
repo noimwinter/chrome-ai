@@ -106,14 +106,17 @@ function initHighlighter() {
       },
       onSummarize: async (currentSelection) => {
         savedSelection = currentSelection.toString();
-        currentVisualizationContainer = await createVisualizationContainer(currentSelection);
-        requestDiagramGeneration(currentSelection.toString());
         if (overlayIframe === null) {
           toggleOverlay(true);
         } else {
           overlayIframe?.contentWindow?.postMessage({ type: "EXTRACTION_RESULT", data: extractSelection() }, "*");
         }
       },
+      onVisualize: async (currentSelection) => {
+        savedSelection = currentSelection.toString();
+        currentVisualizationContainer = await createVisualizationContainer(currentSelection);
+        requestDiagramGeneration(currentSelection.toString());
+      }
     });
   }
 
@@ -252,6 +255,20 @@ window.addEventListener("message", (e) => {
     overlayIframe = null;
     savedSelection = null;
   }
+  
+  if (type === "ENABLE_SUMMARIZE_BUTTON") {
+    // Re-enable summarize button when summarization is complete
+    if (floatingToolbar) {
+      floatingToolbar.enableSummarizeButton();
+    }
+  }
+
+  if (type === "DISABLE_SUMMARIZE_BUTTON") {
+    // Disable summarize button when summarization is in progress
+    if (floatingToolbar) {
+      floatingToolbar.disableSummarizeButton();
+    }
+  }
 });
 
 window.addEventListener("message", async (e) => {
@@ -300,9 +317,9 @@ window.addEventListener("message", async (e) => {
 });
 
 // Handle Mermaid event
-window.addEventListener("message", async (e) => {
-  if (e.data?.type === "MERMAID_RENDER_RESULT") {
-    renderMermaid(e.data.result);
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg?.type === "MERMAID_RENDER_RESULT") {
+    renderMermaid(msg);
   }
 });
 
@@ -418,7 +435,6 @@ function createVisualizationContainer(currentSelection) {
 // Send a diagram generation request to the language model
 async function requestDiagramGeneration(text) {
   try {
-    overlayIframe?.contentWindow?.postMessage({ type: "DIAGRAM_PROGRESS" }, "*");
     const languageModel = await makeLanguageModel(await getDiagramPrompt());
     const result = await languageModel.prompt("Generate a Mermaid diagram for the following text:\n\n" + text);
 
@@ -429,9 +445,8 @@ async function requestDiagramGeneration(text) {
 
     const mermaidCode = mermaidSyntax[1];
 
-    // The content script cannot directly use mermaid.js because it's running in an isolated world.
-    // Therefore, the diagram rendering request is sent to overlay.js, which has access to mermaid.
-    overlayIframe?.contentWindow?.postMessage({ type: "MERMAID_RENDER_REQUEST", mermaidCode: mermaidCode }, "*");
+    // The content script cannot directly use mermaid.
+    chrome.runtime.sendMessage({ type: "MERMAID_RENDER_REQUEST",  mermaidCode });
   } catch (err) {
     console.error("Diagram generation error:", err);
     showDiagramError();
@@ -440,6 +455,11 @@ async function requestDiagramGeneration(text) {
 
 // Render Mermaid diagram in visualization container
 async function renderMermaid(renderResult) {
+  // Re-enable visualize button
+  if (floatingToolbar) {
+    floatingToolbar.enableVisualizeButton();
+  }
+
   if (!renderResult.success) {
     showDiagramError();
   } else {
@@ -463,8 +483,6 @@ async function renderMermaid(renderResult) {
       showDiagramPopup(renderResult.output);
     });
   }
-
-  overlayIframe?.contentWindow?.postMessage({ type: "DIAGRAM_COMPLETE" }, "*");
 }
 
 // Show diagram in a popup modal
@@ -508,6 +526,11 @@ function showDiagramPopup(svgContent) {
 
 // Show error message in visualization container
 function showDiagramError() {
+  // Re-enable visualize button
+  if (floatingToolbar) {
+    floatingToolbar.enableVisualizeButton();
+  }
+
   const errorDiv = document.createElement("div");
   errorDiv.className = "visualization-error";
   errorDiv.textContent = "Diagram generation failed";

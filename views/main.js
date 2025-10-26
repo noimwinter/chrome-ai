@@ -1,6 +1,3 @@
-let _pendingSummarizer = false;
-let _pendingDiagram = false;
-
 // Post message to parent that overlay with main.html is ready
 window.parent.postMessage({ type: "OVERLAY_READY" }, "*");
 
@@ -32,16 +29,9 @@ window.addEventListener("message", async (e) => {
     const { paragraphs, mode } = e.data.data || {};
     const text = (paragraphs || []).map((p) => p.text).join("\n\n");
 
-    document.getElementById("btn-summarize-page").disabled = true;
-    document.getElementById("btn-summarize-selection").disabled = true;
-
-    const hasText = !!text && text.trim().length > 0;
-    _pendingSummarizer = hasText;
-
-    requestSummarizeText(text, mode);
+    setSummarizeButtonsEnabled(false);
     
-    // In case there's nothing to do (empty text), re-enable immediately
-    maybeEnableButtons();
+    requestSummarizeText(text, mode);
   }
 });
 
@@ -53,15 +43,13 @@ window.addEventListener("message", async (e) => {
 
   if (e.data?.type === "SUMMARIZER_RESULT") {
     document.getElementById("out").innerHTML = window.marked.parse(e.data?.result) || "(Empty result)";
-    _pendingSummarizer = false;
-    maybeEnableButtons();
+    setSummarizeButtonsEnabled(true);
   }
 
   if (e.data?.type === "SUMMARIZER_ERROR") {
     document.getElementById("status").textContent = "Error occurred";
     document.getElementById("out").innerHTML = `Error: ${e.data?.error}`;
-    _pendingSummarizer = false;
-    maybeEnableButtons();
+    setSummarizeButtonsEnabled(true);
   }
 });
 
@@ -72,23 +60,23 @@ window.addEventListener("message", async (e) => {
   }
 });
 
-// Handle Diagram events
-window.addEventListener("message", async (e) => {
-  if (e.data?.type === "DIAGRAM_PROGRESS") {
-    _pendingDiagram = true;
-  }
+// Enable or disable summarize buttons
+function setSummarizeButtonsEnabled(isEnabled) {
+  const buttons = [
+    "btn-summarize-page",
+    "btn-summarize-selection"
+  ];
 
-  if (e.data?.type === "DIAGRAM_COMPLETE") {
-    _pendingDiagram = false;
-    maybeEnableButtons();
-  }
-});
+  buttons.forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = !isEnabled;
+  });
 
-// After summarization/diagram tasks, maybe enable buttons
-function maybeEnableButtons() {
-  if (!_pendingSummarizer && !_pendingDiagram) {
-    document.getElementById("btn-summarize-page").disabled = false;
-    document.getElementById("btn-summarize-selection").disabled = false;
+  // Toggle summarize button in floating toolbar
+  if (isEnabled) {
+    window.parent.postMessage({ type: "ENABLE_SUMMARIZE_BUTTON" }, "*");
+  } else {
+    window.parent.postMessage({ type: "DISABLE_SUMMARIZE_BUTTON" }, "*");
   }
 }
 

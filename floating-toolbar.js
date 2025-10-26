@@ -3,6 +3,7 @@ class FloatingToolbar {
     this.onHighlight = options.onHighlight || (() => {});
     this.onComment = options.onComment || (() => {});
     this.onSummarize = options.onSummarize || (() => {});
+    this.onVisualize = options.onVisualize || (() => {});
     
     this.toolbar = null;
     this.currentSelection = null;
@@ -99,11 +100,15 @@ class FloatingToolbar {
         <span class="btn-text">Highlight</span>
       </button>
       <button class="toolbar-btn" data-action="summarize">
-        <span class="btn-icon">🧠</span>
-        <span class="btn-text">Summary & Visualization</span>
+        <span class="btn-icon">📝</span>
+        <span class="btn-text">Summarize</span>
+      </button>
+      <button class="toolbar-btn" data-action="visualize">
+        <span class="btn-icon">🎨</span>
+        <span class="btn-text">Visualize</span>
       </button>
       <button class="toolbar-btn" data-action="comment">
-        <span class="btn-icon">📜</span>
+        <span class="btn-icon">💬</span>
         <span class="btn-text">Comment</span>
       </button>
     `;
@@ -130,7 +135,12 @@ class FloatingToolbar {
         this.onHighlight('lightblue');
         break;
       case 'summarize':
+        this.disableSummarizeButton();
         this.onSummarize(this.currentSelection);
+        break;
+      case 'visualize':
+        this.disableVisualizeButton();
+        this.onVisualize(this.currentSelection);
         break;
       case 'comment':
         this.onComment();
@@ -139,6 +149,46 @@ class FloatingToolbar {
 
     this.hideToolbar();
     this.currentSelection = null;
+  }
+
+  disableSummarizeButton() {
+    if (this.toolbar) {
+      const summarizeBtn = this.toolbar.querySelector('[data-action="summarize"]');
+      if (summarizeBtn) {
+        summarizeBtn.disabled = true;
+        summarizeBtn.classList.add('disabled');
+      }
+    }
+  }
+
+  enableSummarizeButton() {
+    if (this.toolbar) {
+      const summarizeBtn = this.toolbar.querySelector('[data-action="summarize"]');
+      if (summarizeBtn) {
+        summarizeBtn.disabled = false;
+        summarizeBtn.classList.remove('disabled');
+      }
+    }
+  }
+
+  disableVisualizeButton() {
+    if (this.toolbar) {
+      const visualizeBtn = this.toolbar.querySelector('[data-action="visualize"]');
+      if (visualizeBtn) {
+        visualizeBtn.disabled = true;
+        visualizeBtn.classList.add('disabled');
+      }
+    }
+  }
+
+  enableVisualizeButton() {
+    if (this.toolbar) {
+      const visualizeBtn = this.toolbar.querySelector('[data-action="visualize"]');
+      if (visualizeBtn) {
+        visualizeBtn.disabled = false;
+        visualizeBtn.classList.remove('disabled');
+      }
+    }
   }
 
   hideToolbar() {

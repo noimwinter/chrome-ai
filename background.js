@@ -57,3 +57,36 @@ chrome.commands.onCommand.addListener(async (cmd, tab) => {
   if (cmd !== "toggle-overlay" || !tab?.id) return;
   try { await chrome.tabs.sendMessage(tab.id, { type: "TOGGLE_OVERLAY" }); } catch {}
 });
+
+// Store current tab ID for Mermaid rendering
+let mermaidRequestTabId = null;
+
+// Handle Mermaid events
+chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
+  if (msg?.type === 'MERMAID_RENDER_REQUEST') {
+    mermaidRequestTabId = sender.tab?.id; // Store tab ID
+    await ensureOffscreen();
+    chrome.runtime.sendMessage({ type: 'MERMAID_RENDER_REQUEST_TO_OFFSCREEN', mermaidCode: msg.mermaidCode });
+    sendResponse({ success: true });
+  }
+
+  // offscreen → background → content
+  if (msg?.type === 'MERMAID_RENDER_RESULT') {
+    chrome.tabs.sendMessage(mermaidRequestTabId, {
+      type: 'MERMAID_RENDER_RESULT',
+      success: msg.result.success,
+      output: msg.result.output
+    });
+  }
+});
+
+async function ensureOffscreen() {
+  const existing = await chrome.offscreen.hasDocument?.();
+  if (existing) return;
+
+  await chrome.offscreen.createDocument({
+    url: 'offscreen.html',
+    reasons: ['DOM_PARSER'],
+    justification: 'Render Mermaid diagrams safely offscreen'
+  });
+}
