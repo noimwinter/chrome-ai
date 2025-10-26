@@ -190,7 +190,6 @@ class VisualizationManager {
           console.error('Visualization save error:', chrome.runtime.lastError);
           reject(chrome.runtime.lastError);
         } else {
-          console.log(`✅ Saved ${vizArray.length} visualizations for key: ${this.storageKey}`);
           resolve();
         }
       });
@@ -200,7 +199,6 @@ class VisualizationManager {
   // Load visualizations from storage
   async loadVisualizations() {
     return new Promise((resolve, reject) => {
-      console.log(`🔍 Loading visualizations for key: ${this.storageKey}`);
       
       chrome.storage.local.get([this.storageKey], (result) => {
         if (chrome.runtime.lastError) {
@@ -210,7 +208,6 @@ class VisualizationManager {
         }
 
         const vizArray = result[this.storageKey] || [];
-        console.log(`✅ Loaded ${vizArray.length} visualizations`);
         
         let successCount = 0;
         vizArray.forEach(data => {
@@ -223,7 +220,6 @@ class VisualizationManager {
           }
         });
         
-        console.log(`Restored ${successCount} out of ${vizArray.length} visualizations`);
         resolve(successCount);
       });
     });
@@ -336,7 +332,6 @@ class VisualizationManager {
     
     return new Promise((resolve) => {
       chrome.storage.local.remove([this.storageKey], () => {
-        console.log('Cleared all visualizations');
         resolve();
       });
     });

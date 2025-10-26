@@ -29,25 +29,17 @@ function initHighlighter() {
     window.debugHighlights = {
       checkStorage: async () => {
         if (!highlighter) {
-          console.log('❌ Highlighter not initialized');
           return;
         }
         
-        console.log('🔍 Checking storage...');
-        console.log('Storage Key:', highlighter.storageKey);
-        console.log('Current URL:', window.location.href);
-        
         chrome.storage.local.get([highlighter.storageKey], (result) => {
           const highlights = result[highlighter.storageKey] || [];
-          console.log(`✅ Found ${highlights.length} highlights in storage`);
           console.table(highlights);
         });
         
         // Show all highlight keys
         chrome.storage.local.get(null, (all) => {
           const keys = Object.keys(all).filter(k => k.startsWith('highlights:'));
-          console.log(`📦 Total highlight keys in storage: ${keys.length}`);
-          console.log('All keys:', keys);
         });
       },
       
@@ -56,7 +48,6 @@ function initHighlighter() {
           chrome.storage.local.get(null, (all) => {
             const keys = Object.keys(all).filter(k => k.startsWith('highlights:'));
             chrome.storage.local.remove(keys, () => {
-              console.log(`✅ Cleared ${keys.length} highlight keys`);
               location.reload();
             });
           });
@@ -65,10 +56,8 @@ function initHighlighter() {
       
       listHighlights: () => {
         if (!highlighter) {
-          console.log('❌ Highlighter not initialized');
           return;
         }
-        console.log(`Current highlights in memory: ${highlighter.highlights.size}`);
         console.table(Array.from(highlighter.highlights.values()).map(h => ({
           id: h.id,
           text: h.text.substring(0, 50) + '...',
@@ -78,17 +67,11 @@ function initHighlighter() {
       }
     };
     
-    console.log('🧪 Debug tools available:');
-    console.log('  window.debugHighlights.checkStorage() - Check storage');
-    console.log('  window.debugHighlights.clearAll() - Clear all highlights');
-    console.log('  window.debugHighlights.listHighlights() - List current highlights');
   }
 
   if (typeof VisualizationManager !== "undefined") {
     visualizationManager = new VisualizationManager();
     visualizationManager.loadVisualizations();
-    
-    console.log('📊 VisualizationManager initialized');
   }
 
   if (typeof FloatingToolbar !== "undefined") {

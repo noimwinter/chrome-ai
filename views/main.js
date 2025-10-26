@@ -86,7 +86,6 @@ function setSummarizeButtonsEnabled(isEnabled) {
 
 // Summarize the given text
 async function requestSummarizeText(mode, text, graphics = []) {
-  console.log("text to summarize : " + text);
 
   if (!text.trim()) {
     document.getElementById("out").textContent = (mode === "selection") ? "No text selected to summarize." : "No page content to summarize.";

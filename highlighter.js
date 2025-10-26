@@ -296,8 +296,6 @@ class TextHighlighter {
           console.error('Save error:', chrome.runtime.lastError);
           reject(chrome.runtime.lastError);
         } else {
-          console.log(`✅ Saved ${highlightsArray.length} highlights for key: ${this.storageKey}`);
-          console.log('Highlights data:', highlightsArray);
           resolve();
         }
       });
@@ -307,7 +305,6 @@ class TextHighlighter {
   // Load highlights from storage
   async loadHighlights() {
     return new Promise((resolve, reject) => {
-      console.log(`🔍 Loading highlights for key: ${this.storageKey}`);
       
       chrome.storage.local.get([this.storageKey], (result) => {
         if (chrome.runtime.lastError) {
@@ -317,8 +314,6 @@ class TextHighlighter {
         }
 
         const highlightsArray = result[this.storageKey] || [];
-        console.log(`✅ Loaded ${highlightsArray.length} highlights`);
-        console.log('Highlights data:', highlightsArray);
         
         let successCount = 0;
         highlightsArray.forEach(data => {
@@ -331,7 +326,6 @@ class TextHighlighter {
           }
         });
         
-        console.log(`Applied ${successCount} out of ${highlightsArray.length} highlights`);
         resolve(successCount);
       });
     });
@@ -356,7 +350,6 @@ class TextHighlighter {
     
     return new Promise((resolve) => {
       chrome.storage.local.remove([this.storageKey], () => {
-        console.log('Cleared all highlights');
         resolve();
       });
     });
