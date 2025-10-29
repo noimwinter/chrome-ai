@@ -82,7 +82,7 @@ Before installing GLWM, please verify these requirements:
 
 1. Clone or download this repository:
    ```bash
-   git clone https://github.com/yourusername/glwm.git
+   git clone https://github.com/noimwinter/chrome-ai
    ```
 2. Open `chrome://extensions/` in Chrome Dev/Canary
 3. Enable **"Developer mode"** toggle in the top right
@@ -102,7 +102,7 @@ Before installing GLWM, please verify these requirements:
 **Method 1: Right-click Menu**
 1. Select desired text on any webpage by dragging
 2. Right-click and select **"Highlight Text"** menu
-3. Choose your color (Yellow 🟨, Blue 🟦, Green 🟩, Pink 🟥, Orange 🟧)
+3. Choose your color (Yellow 🟨, Blue 🟦)
 
 **Method 2: Floating Toolbar (Recommended)**
 1. Select text and the floating toolbar appears automatically
@@ -232,31 +232,6 @@ Your learning content, highlights, and comments exist only on your computer.
 - **Service Worker** - Background task processing
 - **Content Scripts** - Web page interactions
 - **Iframe-based Overlay** - CSS conflict-free UI
-
-## 🧪 Development & Testing
-
-### Running Development Server
-
-```bash
-npm install
-npm start
-```
-
-After server starts:
-- Main page: http://localhost:5000/
-- Test page: http://localhost:5000/test
-- Extension info: http://localhost:5000/extension
-
-### Testing
-
-1. Install extension in Chrome (see installation steps above)
-2. Run development server: `npm start`
-3. Visit http://localhost:5000/test page
-4. Test various text selections and highlighting
-5. Verify highlights persist after page refresh
-6. Test adding/editing/deleting comments
-7. Test summarization features
-8. Verify diagram generation
 
 ## ⚠️ Troubleshooting
 
