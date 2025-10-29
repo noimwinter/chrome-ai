@@ -1,6 +1,13 @@
 # Get Locked In With Me (GLWM)
 
-**Get Focused Together!** GLWM is a Chrome extension that enhances your web reading and learning experience with AI-powered text summarization and persistent highlighting. Just like YouTube's "Get Ready With Me," let's get locked in with GLWM.
+**Turn long reads into quick, personal insights — summarize, visualize, and learn smarter.** 
+
+
+GLWM is a Chrome extension that enhances your web reading and learning experience with AI-powered text summarization and persistent highlighting. 
+
+
+## 🧠 Inspiration
+Sometimes, we're faced with long and complex text for studying, research, or work, and it’s easy to lose focus or miss the key ideas. We wondered, what if reading online could feel lighter, clearer, and more interactive? And why copy and paste materials to your online notebook app when you can do the same thing on the website? Those thought inspired us to build a tool that adapts to different learning styles, whether you’re a visual learner, a student, or someone who prefers quick key-point summaries. 
 
 ## 🎯 Why GLWM?
 
@@ -265,27 +272,6 @@ Your learning content, highlights, and comments exist only on your computer.
 2. Confirm correct folder selected (folder containing manifest.json)
 3. Restart Chrome
 4. Click "Reload" button on extension page
-
-## 🚧 Known Limitations
-
-- **Dynamic Pages**: Highlight positions may misalign on pages with frequent JavaScript content changes
-- **iframe Content**: Cannot highlight text inside iframes
-- **PDF Files**: Web PDF viewers currently not supported (planned for future)
-- **Chrome Account Sync**: Highlights stored locally only, not synced across devices
-- **AI API Availability**: AI features may not work depending on region, Chrome version, or device specs
-
-## 🎯 Future Roadmap
-
-- [ ] Export highlights (JSON, Markdown, PDF)
-- [ ] Highlight search and filtering
-- [ ] Tag system for highlight categorization
-- [ ] Chrome account sync option
-- [ ] PDF file support
-- [ ] Enhanced dynamic page handling with MutationObserver
-- [ ] Highlight statistics and insights (most highlighted sites, etc.)
-- [ ] Customizable keyboard shortcuts
-- [ ] Dark mode support
-- [ ] Highlight sharing features
 
 ## 📝 License
 
