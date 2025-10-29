@@ -276,11 +276,11 @@ MIT License
 
 ## 👥 Contributors
 
-| Name | Mail | Affiliation | GitHub |
-|------|------|---------------------|---------|
-| Hyojun Park | developer.bombi@gmail.com | Software Developer | [bom-b](https://github.com/bom-b) |
-| Dohyun Kim | d67kim@uwaterloo.ca | Software Developer, University of Waterloo | [noimwinter](https://github.com/noimwinter) |
-| Theo Lim | lsmman07@gmail.com | Lecturer, Software Developer | [theo-lim](https://github.com/lsmman) |
+| Name | Affiliation | Mail | GitHub |
+|------|--------------|------|---------|
+| Hyojun Park | Software Developer | developer.bombi@gmail.com | [bom-b](https://github.com/bom-b) |
+| Dohyun Kim | Software Developer, University of Waterloo | d67kim@uwaterloo.ca | [noimwinter](https://github.com/noimwinter) |
+| Theo Lim | Lecturer, Software Developer | lsmman07@gmail.com | [lsmman](https://github.com/lsmman) |
 ---
 
 **Get Locked In With Me** and start your more efficient web learning experience! 🚀
