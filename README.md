@@ -1,106 +1,156 @@
-# Personal Summarizer - Chrome Extension
+# Get Locked In With Me (GLWM)
 
-AI 기반 텍스트 요약 및 하이라이트 기능을 제공하는 Chrome 브라우저 확장 프로그램입니다.
+**Get Focused Together!** GLWM is a Chrome extension that enhances your web reading and learning experience with AI-powered text summarization and persistent highlighting. Just like YouTube's "Get Ready With Me," let's get locked in with GLWM.
 
-## 주요 기능
+## 🎯 Why GLWM?
 
-### ✨ AI 텍스트 요약
-- Chrome 내장 Summarizer API를 활용한 텍스트 요약
-- 직업(occupation)에 따른 맞춤형 요약
-- 요약 길이 선택 (Short, Medium, Long)
-- 요약 타입 선택 (Key Points, TL;DR)
+Unlike typical summarization tools, GLWM builds **your personal digital learning notebook**:
 
-### 🖍️ 텍스트 하이라이트
-- XPath 기반 정확한 텍스트 위치 저장
-- 페이지 새로고침 후에도 하이라이트 유지
-- 4가지 색상 선택 (Yellow, Blue, Green, Pink)
-- 하이라이트에 코멘트 추가/수정 기능
-- URL별 하이라이트 관리
+- **Permanent Persistence**: Your highlights and comments stay intact even after page refreshes. Your thoughts and notes are always there when you return.
+- **Personalized AI Summaries**: Tailored summaries based on your occupation and learning goals. Content is restructured for students, developers, researchers, and more.
+- **Complete Privacy**: 100% offline operation using Chrome's built-in AI. Your data never leaves your computer.
+- **Visual Learning**: Automatically converts complex text into diagrams for better understanding.
 
-### 💬 코멘트 시스템
-- 하이라이트된 텍스트에 메모 추가
-- 코멘트 편집 및 삭제
-- 코멘트가 있는 하이라이트는 💬 아이콘 표시
+We don't just summarize text—we enhance your entire web learning experience.
 
-### 📊 자동 다이어그램 생성
-- LanguageModel API를 사용한 Mermaid 다이어그램 자동 생성
-- 텍스트 내용을 시각화
+## 🌟 Key Features
 
-## 설치 방법
+### ✨ AI-Powered Customized Summaries
+- **100% Offline AI Summarization** using Chrome's built-in Summarizer API
+- Occupation-based customization (Student, Developer, Researcher, Marketer, etc.)
+- Summary length options: Short, Medium, Long
+- Summary type options: Key Points, TL;DR
+- Summarize entire pages or selected text only
 
-1. Chrome 브라우저에서 `chrome://extensions/` 페이지 열기
-2. 우측 상단의 "개발자 모드" 토글 활성화
-3. "압축해제된 확장 프로그램을 로드합니다" 클릭
-4. 이 프로젝트 폴더 선택
+### 🖍️ Persistent Text Highlighting
+- **XPath-based precise positioning** - Highlights persist after page refresh
+- 5 color choices (Yellow, Blue, Green, Pink, Orange)
+- Add and edit comments on each highlight
+- Automatic URL-based management - Independent storage per webpage
+- Quick highlighting via floating toolbar on text selection
 
-## 사용 방법
+### 💬 Smart Comment System
+- Add notes freely to highlighted text
+- Edit and delete comments
+- Highlights with comments show 💬 icon
+- Instant comment access by clicking highlights
 
-### 텍스트 하이라이트 하기
+### 📊 Automatic Diagram Generation
+- Auto-generate Mermaid diagrams using LanguageModel API
+- Visualize content as flowcharts, sequence diagrams, pie charts, and more
+- Understand complex concepts at a glance
 
-1. 웹 페이지에서 텍스트 선택
-2. 우클릭하여 "Highlight Text" 메뉴 선택
-3. 원하는 색상 선택 (Yellow, Blue, Green, Pink)
-4. 하이라이트된 텍스트를 클릭하여 코멘트 추가
+### 📝 Unified Highlight Management
+- View all highlights on current page at once
+- Click highlights to scroll to their location
+- Individual or bulk delete options
 
-### 텍스트 요약하기
+## ⚡ Prerequisites
 
-1. 확장 프로그램 아이콘 클릭 또는 `Alt+S` 단축키
-2. "Summarize Page" 또는 "Summarize Selection" 버튼 클릭
-3. AI가 생성한 요약 결과 확인
+Before installing GLWM, please verify these requirements:
 
-### 하이라이트 관리
+### Chrome Version
+- **Chrome Dev or Canary channel** required
+- Version **128.0 or higher** required
+- [Download Chrome Dev](https://www.google.com/chrome/dev/)
+- [Download Chrome Canary](https://www.google.com/chrome/canary/)
 
-1. 확장 프로그램 오버레이에서 "📝 View My Highlights" 클릭
-2. 현재 페이지의 모든 하이라이트 목록 확인
-3. 코멘트 추가/수정 또는 하이라이트 삭제
-4. "Clear All" 버튼으로 모든 하이라이트 제거
+### Chrome AI API Activation
+- Summarizer API and LanguageModel API activation required
+- May not be available in some regions or devices
+- See installation section below for detailed activation steps
 
-## 기술 스택
+### System Requirements
+- Stable Chrome browser environment
+- Local storage available (for saving highlights)
 
-### 핵심 기술
-- **Chrome Extension API** (Manifest V3)
-- **Chrome Summarizer API** - AI 요약
-- **Chrome LanguageModel API** - 다이어그램 생성
-- **XPath** - 정확한 텍스트 위치 추적
+## 🚀 Installation
 
-### 라이브러리
-- **Mermaid.js** - 다이어그램 렌더링
-- **Marked.js** - 마크다운 파싱
+### Step 1: Enable Chrome AI APIs
 
-## 프로젝트 구조
+1. Launch Chrome Dev or Canary
+2. Navigate to `chrome://flags/#optimization-guide-on-device-model`
+3. Select **"Enabled BypassPerfRequirement"**
+   - This bypasses performance checks to enable AI model download
+4. Navigate to `chrome://flags/#prompt-api-for-gemini-nano`
+5. Select **"Enabled"**
+6. Navigate to `chrome://flags/#summarization-api-for-gemini-nano`
+7. Select **"Enabled"**
+8. **Restart** Chrome
 
-```
-.
-├── manifest.json              # 확장 프로그램 설정
-├── background.js              # 백그라운드 서비스 워커
-├── content.js                 # 콘텐츠 스크립트 (페이지 조작)
-├── highlighter.js            # 하이라이트 핵심 로직 ⭐ NEW
-├── overlay.html              # 오버레이 UI
-├── overlay.js                # 오버레이 컨트롤러
-├── global.css                # 전역 스타일
-├── views/
-│   ├── main.html             # 메인 뷰
-│   ├── main.js               # 메인 뷰 컨트롤러
-│   ├── settings.html         # 설정 뷰
-│   ├── settings.js           # 설정 컨트롤러
-│   ├── highlights.html       # 하이라이트 관리 뷰 ⭐ NEW
-│   └── highlights.js         # 하이라이트 관리 컨트롤러 ⭐ NEW
-├── vendor/
-│   ├── marked.min.js         # 마크다운 파서
-│   └── mermaid.min.js        # 다이어그램 라이브러리
-├── prompts/
-│   └── language-model-system.md  # AI 시스템 프롬프트
-├── test-highlight.html       # 테스트 페이지 ⭐ NEW
-├── server.js                 # 개발 서버 ⭐ NEW
-└── package.json              # Node.js 설정 ⭐ NEW
-```
+### Step 2: Install GLWM Extension
 
-## 하이라이트 기능 상세
+1. Clone or download this repository:
+   ```bash
+   git clone https://github.com/yourusername/glwm.git
+   ```
+2. Open `chrome://extensions/` in Chrome Dev/Canary
+3. Enable **"Developer mode"** toggle in the top right
+4. Click **"Load unpacked"** button
+5. Select the downloaded GLWM folder
+6. The extension appears in your Chrome toolbar
 
-### 데이터 저장 구조
+### Step 3: Verify Installation
 
-하이라이트는 URL별로 chrome.storage.local에 저장됩니다:
+1. Click the extension icon or press `Alt+S` shortcut
+2. If the overlay displays properly, installation is complete!
 
+## 💡 How to Use
+
+### Highlighting Text
+
+**Method 1: Right-click Menu**
+1. Select desired text on any webpage by dragging
+2. Right-click and select **"Highlight Text"** menu
+3. Choose your color (Yellow 🟨, Blue 🟦, Green 🟩, Pink 🟥, Orange 🟧)
+
+**Method 2: Floating Toolbar (Recommended)**
+1. Select text and the floating toolbar appears automatically
+2. Click highlight button and choose color from toolbar
+3. Highlight applies instantly
+
+**Adding Comments**
+1. Click on any highlighted text
+2. Type your note in the comment box that appears
+3. Save to display 💬 icon on that highlight
+
+### Summarizing Text
+
+1. Click extension icon or press `Alt+S` shortcut
+2. Select occupation in settings (Student, Developer, Researcher, etc.)
+3. Click **"Summarize Page"** button to summarize entire page
+4. Or select text first then click **"Summarize Selection"**
+5. View AI-generated summary and automatic diagrams
+
+### Managing Highlights
+
+1. Click **"📝 View My Highlights"** in extension overlay
+2. View list of all highlights on current page
+3. Click any highlight to scroll to its location
+4. Add/edit comments or delete individual highlights
+5. Use **"Clear All"** button to remove all highlights from current page
+
+## 🔧 How It Works
+
+GLWM combines Chrome's built-in AI with a sophisticated text positioning system:
+
+1. **Text Selection Detection**: Floating toolbar appears when user selects text
+2. **XPath-based Position Storage**: Calculates exact DOM path as XPath with character-level offsets
+3. **Local Storage Saving**: Stores highlight info (position, color, comment, text) per URL in Chrome's local storage
+4. **Restoration on Page Load**: Converts saved XPath back to DOM ranges and recreates highlights when page loads
+5. **AI Processing**: When summarization is requested, Chrome's built-in Gemini Nano AI analyzes and summarizes text 100% offline
+
+### Technical Features
+
+- **XPath Precision**: Stores exact DOM path of text nodes, ensuring accurate position restoration when page structure remains unchanged
+- **Character-level Offset**: Stores exact character position within text nodes
+- **URL-based Isolation**: Manages highlights independently for each webpage
+
+## ⚙️ Features in Detail
+
+### Highlight System
+
+**Data Storage Structure**
 ```javascript
 {
   "highlights:https://example.com/page": [
@@ -112,65 +162,162 @@ AI 기반 텍스트 요약 및 하이라이트 기능을 제공하는 Chrome 브
       "endOffset": 45,
       "color": "yellow",
       "text": "highlighted text",
-      "comment": "내 코멘트",
+      "comment": "my comment",
       "timestamp": 1698765432000
     }
   ]
 }
 ```
 
-### XPath 기반 위치 저장
+**Supported Colors**
+- Yellow: General highlights
+- Blue: Important information
+- Green: Definitions or concepts
+- Pink: Questions or uncertainties
+- Orange: Cautions or warnings
 
-- 텍스트 노드의 정확한 DOM 경로를 XPath로 저장
-- 문자 단위 offset으로 정확한 위치 지정
-- 페이지 구조가 변경되지 않는 한 동일한 위치 복원 가능
+### AI Summary Options
 
-## 개발 서버
+**Occupation-based Customization**
+- Student: Learning-optimized summaries
+- Developer: Technical content emphasis
+- Researcher: Academic perspective focus
+- Marketer: Core message focus
+- General: Balanced summaries
 
-테스트를 위한 간단한 웹 서버가 포함되어 있습니다:
+**Summary Length**
+- Short: Key points only
+- Medium: Appropriate detail
+- Long: Detailed summary
+
+**Summary Type**
+- Key Points: Core points as bullet list
+- TL;DR: Entire content in one paragraph
+
+### Diagram Generation
+
+Automatically analyzes content to select the most appropriate diagram type:
+- **Flowchart**: Process or procedure descriptions
+- **Sequence Diagram**: Time-sequential content
+- **Pie Chart**: Ratio or distribution information
+- **Mind Map**: Concept relationships
+- **Gantt Chart**: Schedules or plans
+
+## 🔒 Privacy & Security
+
+GLWM prioritizes your privacy:
+
+- ✅ **100% Offline AI Processing** - Uses Chrome's built-in Gemini Nano
+- ✅ **No External Server Transmission** - All data processed locally only
+- ✅ **No Data Collection** - We don't collect any user data
+- ✅ **Complete Local Storage** - Highlights and settings stored only in Chrome local storage
+- ✅ **No Tracking** - No analytics tools or trackers used
+
+Your learning content, highlights, and comments exist only on your computer.
+
+## 🛠️ Tech Stack
+
+### Core Technologies
+- **Chrome Extension API** (Manifest V3)
+- **Chrome Summarizer API** - Offline AI summarization
+- **Chrome LanguageModel API** - Diagram generation
+- **XPath** - Precise text position tracking and storage
+
+### Libraries
+- **Mermaid.js** - Diagram rendering
+- **Marked.js** - Markdown parsing
+
+### Architecture
+- **Manifest V3** - Latest Chrome extension standard
+- **Service Worker** - Background task processing
+- **Content Scripts** - Web page interactions
+- **Iframe-based Overlay** - CSS conflict-free UI
+
+## 🧪 Development & Testing
+
+### Running Development Server
 
 ```bash
 npm install
 npm start
 ```
 
-서버 실행 후:
-- 메인 페이지: http://localhost:5000/
-- 테스트 페이지: http://localhost:5000/test
-- 확장 프로그램 정보: http://localhost:5000/extension
+After server starts:
+- Main page: http://localhost:5000/
+- Test page: http://localhost:5000/test
+- Extension info: http://localhost:5000/extension
 
-## 테스트 방법
+### Testing
 
-1. Chrome에 확장 프로그램 설치
-2. 개발 서버 실행: `npm start`
-3. http://localhost:5000/test 페이지 접속
-4. 텍스트 선택 후 우클릭 → "Highlight Text"
-5. 색상 선택 후 하이라이트 생성 확인
-6. 하이라이트 클릭하여 코멘트 추가
-7. 페이지 새로고침 후 하이라이트 유지 확인
-8. 확장 프로그램에서 "View My Highlights" 클릭하여 관리
+1. Install extension in Chrome (see installation steps above)
+2. Run development server: `npm start`
+3. Visit http://localhost:5000/test page
+4. Test various text selections and highlighting
+5. Verify highlights persist after page refresh
+6. Test adding/editing/deleting comments
+7. Test summarization features
+8. Verify diagram generation
 
-## 주의사항
+## ⚠️ Troubleshooting
 
-### Chrome Summarizer API 요구사항
-- Chrome 128 이상 필요
-- Summarizer API가 활성화되어야 함
-- 일부 기기에서는 사용 불가능할 수 있음
+### AI Summarization Not Working
 
-### 하이라이트 제한사항
-- 동적으로 변경되는 페이지에서는 하이라이트 위치가 어긋날 수 있음
-- JavaScript로 생성된 콘텐츠는 하이라이트가 즉시 적용되지 않을 수 있음
-- iframe 내부 콘텐츠는 하이라이트 불가
+1. Verify Chrome version is 128.0 or higher
+2. Check `chrome://flags` settings are configured correctly:
+   - `#optimization-guide-on-device-model`: Enabled BypassPerfRequirement
+   - `#prompt-api-for-gemini-nano`: Enabled
+   - `#summarization-api-for-gemini-nano`: Enabled
+3. Completely restart Chrome
+4. AI APIs may not be supported in some regions or devices
+5. Check Chrome Developer Console (F12) for error messages
 
-## 향후 개선 계획
+### Highlights Disappearing
 
-- [ ] 하이라이트 내보내기 (JSON, Markdown)
-- [ ] 하이라이트 검색 기능
-- [ ] 태그 시스템으로 하이라이트 분류
-- [ ] 클라우드 동기화
-- [ ] PDF 파일 지원
-- [ ] MutationObserver로 동적 페이지 대응
+1. Page DOM structure may have changed significantly (dynamic websites)
+2. Content re-rendered by JavaScript
+3. Chrome local storage may be full (check in settings)
+4. Page URL changed (including query parameters)
 
-## 라이선스
+### Highlight Position Misalignment
 
-MIT
+1. Page dynamically changes content
+2. Ads or popups being added/removed
+3. Solution: Best used on static content (blogs, documents, etc.)
+
+### Extension Not Loading
+
+1. Verify Developer mode is enabled
+2. Confirm correct folder selected (folder containing manifest.json)
+3. Restart Chrome
+4. Click "Reload" button on extension page
+
+## 🚧 Known Limitations
+
+- **Dynamic Pages**: Highlight positions may misalign on pages with frequent JavaScript content changes
+- **iframe Content**: Cannot highlight text inside iframes
+- **PDF Files**: Web PDF viewers currently not supported (planned for future)
+- **Chrome Account Sync**: Highlights stored locally only, not synced across devices
+- **AI API Availability**: AI features may not work depending on region, Chrome version, or device specs
+
+## 🎯 Future Roadmap
+
+- [ ] Export highlights (JSON, Markdown, PDF)
+- [ ] Highlight search and filtering
+- [ ] Tag system for highlight categorization
+- [ ] Chrome account sync option
+- [ ] PDF file support
+- [ ] Enhanced dynamic page handling with MutationObserver
+- [ ] Highlight statistics and insights (most highlighted sites, etc.)
+- [ ] Customizable keyboard shortcuts
+- [ ] Dark mode support
+- [ ] Highlight sharing features
+
+## 📝 License
+
+MIT License
+
+---
+
+**Get Locked In With Me** and start your more efficient web learning experience! 🚀
+
+Questions or feedback? Feel free to open an issue anytime.
