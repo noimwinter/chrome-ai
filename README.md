@@ -179,9 +179,6 @@ GLWM combines Chrome's built-in AI with a sophisticated text positioning system:
 **Supported Colors**
 - Yellow: General highlights
 - Blue: Important information
-- Green: Definitions or concepts
-- Pink: Questions or uncertainties
-- Orange: Cautions or warnings
 
 ### AI Summary Options
 
