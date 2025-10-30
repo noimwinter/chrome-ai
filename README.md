@@ -31,7 +31,7 @@ We don't just summarize text—we enhance your entire web learning experience.
 
 ### 🖍️ Persistent Text Highlighting
 - **XPath-based precise positioning** - Highlights persist after page refresh
-- 5 color choices (Yellow, Blue, Green, Pink, Orange)
+- 5 color choices (Yellow, Blue)
 - Add and edit comments on each highlight
 - Automatic URL-based management - Independent storage per webpage
 - Quick highlighting via floating toolbar on text selection
@@ -89,7 +89,7 @@ Before installing GLWM, please verify these requirements:
 
 1. Clone or download this repository:
    ```bash
-   git clone https://github.com/noimwinter/chrome-ai
+   git clone https://github.com/noimwinter/GLWM-GetLockedinWithMe
    ```
 2. Open `chrome://extensions/` in Chrome Dev/Canary
 3. Enable **"Developer mode"** toggle in the top right
